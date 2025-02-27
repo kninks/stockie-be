@@ -1,19 +1,7 @@
 # Stockie BE
 
-## Running the server
-1. Activate the virtual environment
-    ```bash
-    source venv/bin/activate
-    ```
-2. Run the server locally
-    ```bash
-    uvicorn app.main:app --reload
-    ```
-3. To access the API documentation, visit
-   - 📜 Swagger UI (interactive) → http://127.0.0.1:8000/docs
-   - 🔥 ReDoc UI (read-only) → http://127.0.0.1:8000/redoc
-
-## Project setup
+## Project setup (Local Development)
+For first time setup of the project, follow the steps below:
 
 ### Prerequisites
 - python 3.12+
@@ -22,7 +10,7 @@
     python -m pip install --upgrade pip
     ```
 
-### Installation (First time setup)
+### Installation
 1. Clone the repo
 2. Create a virtual environment
     ```bash
@@ -44,9 +32,32 @@
     ```env
     ???????DATABASE_URL=sqlite:///./stockie.db
     ```
-6. Run the server
+
+You're all set! 🚀
+To start the development server, follow the next section.
+
+
+## Running the server locally
+1. Activate the virtual environment
+    ```bash
+    source venv/bin/activate
+    ```
+2. Run the server
     ```bash
     uvicorn app.main:app --reload
     ```
-   
+3. To access the API documentation, visit
+   - 📜 Swagger UI (interactive) → http://127.0.0.1:8000/docs
+   - 🔥 ReDoc UI (read-only) → http://127.0.0.1:8000/redoc
+4. To terminate the server, press `Ctrl + C` in the terminal
+5. To deactivate the virtual environment, run
+    ```bash
+    deactivate
+    ```
+
+## Notes
+
+### Database connection
+- Neon async
+- https://neon.tech/docs/guides/python#create-a-python-project
 
