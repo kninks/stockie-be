@@ -1,8 +1,37 @@
 # Stockie BE
 
+## 📖 Table of Contents
+- 📁 [Project Structure](#project-structure)
+- 🛠 [Project Setup (Local Development)](#project-setup-local-development)
+    - ⚙️ [Prerequisites](#prerequisites)
+    - 📥 [Installation](#installation)
+- 🚀 [Running The Server](#running-the-server)
+- 🧪 [Testing](#testing)
+- 👾 [Troubleshooting](#troubleshooting)
+- 📝 [Resources](#resources)
+
+## Project structure
+```
+stockie-be/
+│── app/
+│   ├── main.py
+│   ├── models/         # Database models
+│   ├── services/         # Business logic
+│   ├── routes/           # API routes
+│   ├── tests/            # Unit tests
+│   ├── utils/            # Utility functions
+│── .env                  # Environment variables
+│── requirements.txt      # Dependencies
+│── README.md
+│── pyproject.toml        # For package management
+│── Dockerfile            # Docker containerization
+│── .gitignore            # Git ignore file
+```
+
 ## Project setup (Local Development)
 For first time setup of the project, follow the steps below:
 
+### Local development
 ### Prerequisites
 - python 3.12+
 - pip (please upgrade to the latest version)
@@ -30,14 +59,16 @@ For first time setup of the project, follow the steps below:
     ```
 5. Create a `.env` file in the root directory and add the following environment variables
     ```env
-    ???????DATABASE_URL=sqlite:///./stockie.db
+    DATABASE_URL=postgresql+asyncpg://neondb_owner:npg_6JtGrYNAxMW0@ep-long-violet-a1z2ze9p-pooler.ap-southeast-1.aws.neon.tech/neondb
     ```
 
 You're all set! 🚀
 To start the development server, follow the next section.
 
 
-## Running the server locally
+## Running the server
+
+### Local development
 1. Activate the virtual environment
     ```bash
     source venv/bin/activate
@@ -54,10 +85,32 @@ To start the development server, follow the next section.
     ```bash
     deactivate
     ```
+   
+## Testing
+1. To run the tests, run the following command
+    ```bash
+    pytest
+    ```
 
-## Notes
+## Troubleshooting
 
 ### Database connection
-- Neon async
-- https://neon.tech/docs/guides/python#create-a-python-project
+- [macOS] If you encounter the following error: 
+`ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1000)`, 
+please install the python certificates by running the following command
+    ```bash
+    /Applications/Python\ 3.x/Install\ Certificates.command
+    ```
+   Replace `3.x` with the version of python you are using.
 
+## Resources
+
+### Database connection
+
+- SQLalchemy →
+    - https://docs.sqlalchemy.org/en/20/tutorial/index.html
+    - https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html
+- Neon async → https://neon.tech/docs/guides/python#create-a-python-project
+
+### Logging
+- colorlog → https://pypi.org/project/colorlog/
