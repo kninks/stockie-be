@@ -19,11 +19,12 @@ logger = logging.getLogger(__name__)
 
 engine = create_async_engine(
     DATABASE_URL,
-    echo=False,           # false = disable SQLAlchemy's default query logging (handled by event listeners)
-    pool_size=5,          # number of connections maintained in the pool (5 for local development)
-    max_overflow=10,      # additional temporary connections if needed (10 for local development)
-    connect_args={"ssl": ssl_context}
+    echo=False,  # false = disable SQLAlchemy's default query logging (handled by event listeners)
+    pool_size=5,  # number of connections maintained in the pool (5 for local development)
+    max_overflow=10,  # additional temporary connections if needed (10 for local development)
+    connect_args={"ssl": ssl_context},
 )
+
 
 @event.listens_for(engine.sync_engine, "connect")
 def on_connect(dbapi_connection, connection_record):
@@ -34,20 +35,20 @@ def on_connect(dbapi_connection, connection_record):
     result = cursor.fetchone()[0]
     logger.info("DB connection test message: %s", result)
 
+
 # Attach event listener: log before executing any SQL statement
 @event.listens_for(Engine, "before_execute")
 def before_execute(conn, clauseelement, multiparams, params, execution_options):
     logger.info("Before execute: %s", clauseelement)
 
+
 # Create the async session factory
 # Note: normal AsyncSession is for a single asynchronous database session
-AsyncSessionLocal = async_sessionmaker(
-    engine,
-    expire_on_commit=False
-)
+AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 # Base class for ORM models
 Base = declarative_base()
+
 
 # Get an async session for each request
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

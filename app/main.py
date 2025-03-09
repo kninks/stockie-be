@@ -1,7 +1,17 @@
 import logging
 
+from app.config import config
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from app.exceptions.custom_exceptions import CustomAPIError
+from app.middleware.logging_middleware import logging_middleware_factory
+from app.exceptions.exception_handlers import (
+    global_exception_handler,
+    http_exception_handler,
+    custom_api_exception_handler,
+    starlette_http_exception_handler,
+)
 from app.utils.logging_config import setup_logging
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from app.routes import prediction, test
 
@@ -9,20 +19,28 @@ from app.routes import prediction, test
 
 setup_logging()
 logger = logging.getLogger(__name__)
+logger.setLevel(config.LOG_LEVEL)
 
 app = FastAPI(
     title="Stockie API",
     description="API for Stockie",
     version="1.0.0",
+    debug=config.DEBUG,
 )
 
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],  # Change this to restrict origins in production
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    logging_middleware_factory(),
+    # CORSMiddleware,
+    # allow_origins=config.ALLOWED_ORIGINS, # Change this to restrict origins in production
+    # allow_credentials=True,
+    # allow_methods=["*"],
+    # allow_headers=["*"],
+)
+
+app.exception_handler(StarletteHTTPException)(starlette_http_exception_handler)
+app.exception_handler(Exception)(global_exception_handler)
+app.exception_handler(HTTPException)(http_exception_handler)
+app.exception_handler(CustomAPIError)(custom_api_exception_handler)
 
 app.include_router(prediction.router, prefix="/prediction", tags=["Prediction"])
 app.include_router(test.router, prefix="/test", tags=["Test"])
