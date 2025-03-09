@@ -1,18 +1,23 @@
+import logging
 import os
 import sys
 import json
 from logging.config import dictConfig
+from app.config import config
 
 from colorlog import ColoredFormatter
 
 COMMON_DATEFMT = "%Y-%m-%d %H:%M:%S"
 
+
 def setup_logging():
+    log_level = logging.DEBUG if config.DEBUG else logging.INFO
+
     log_dir = "logs"
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-    config = {
+    logging_config = {
         "version": 1,
         "disable_existing_loggers": False,
         "formatters": {
@@ -25,10 +30,10 @@ def setup_logging():
                 "format": "%(asctime)s %(log_color)s[%(levelname)s]%(reset)s %(name_log_color)s%(name)s%(reset)s - %(message)s",
                 "datefmt": COMMON_DATEFMT,
                 "log_colors": {
-                    "DEBUG":    "cyan",
-                    "INFO":     "green",
-                    "WARNING":  "yellow",
-                    "ERROR":    "red",
+                    "DEBUG": "cyan",
+                    "INFO": "green",
+                    "WARNING": "yellow",
+                    "ERROR": "red",
                     "CRITICAL": "white,bg_red",
                 },
                 "secondary_log_colors": {
@@ -43,41 +48,41 @@ def setup_logging():
             },
             "json": {
                 # For JSON, you can reuse the same date format
-                "format": json.dumps({
-                    "time": "%(asctime)s",
-                    "logger": "%(name)s",
-                    "level": "%(levelname)s",
-                    "message": "%(message)s"
-                }),
+                "format": json.dumps(
+                    {
+                        "time": "%(asctime)s",
+                        "logger": "%(name)s",
+                        "level": "%(levelname)s",
+                        "message": "%(message)s",
+                    }
+                ),
                 "datefmt": COMMON_DATEFMT,
             },
         },
-
         # Handlers send log records to various outputs (like console or files).
         "handlers": {
             "console": {
                 "class": "logging.StreamHandler",
                 "stream": sys.stdout,
                 "formatter": "colored",
-                "level": "INFO",
+                "level": log_level,
             },
             "file": {
                 "class": "logging.FileHandler",
                 "filename": os.path.join(log_dir, "app.log"),
                 "formatter": "default",  # Human-readable file logs
-                "level": "INFO",
+                "level": log_level,
             },
             "forwarder": {
                 "class": "logging.FileHandler",
                 "filename": os.path.join(log_dir, "forwarder.log"),
                 "formatter": "json",  # JSON-formatted logs for external forwarding
-                "level": "INFO",
+                "level": log_level,
             },
         },
-
         "root": {
             "handlers": ["console", "file", "forwarder"],
-            "level": "INFO",
+            "level": log_level,
         },
     }
-    dictConfig(config)
+    dictConfig(logging_config)

@@ -41,14 +41,17 @@ For first time setup of the project, follow the steps below:
 
 ### Installation
 1. Clone the repo
+
 2. Create a virtual environment
     ```bash
     python -m venv venv
     ```
+   
 3. Activate the virtual environment
     ```bash
     source venv/bin/activate
     ```
+   
 4. Install the dependencies
     ```bash
     pip install -r requirements.txt
@@ -57,7 +60,17 @@ For first time setup of the project, follow the steps below:
     ```bash
     pip freeze > requirements.txt
     ```
-5. Create a `.env` file in the root directory and add the following environment variables
+   
+5. Install pre-commit hooks
+    ```bash
+    pre-commit install
+    ```
+   For any pre-commit hook updates, please run the following command
+    ```bash
+    pre-commit autoupdate
+    ```
+   
+6. Create a `.env` file in the root directory and add the following environment variables
     ```env
     DATABASE_URL=postgresql+asyncpg://neondb_owner:npg_6JtGrYNAxMW0@ep-long-violet-a1z2ze9p-pooler.ap-southeast-1.aws.neon.tech/neondb
     ```
@@ -73,14 +86,18 @@ To start the development server, follow the next section.
     ```bash
     source venv/bin/activate
     ```
+   
 2. Run the server
     ```bash
     uvicorn app.main:app --reload
     ```
+   
 3. To access the API documentation, visit
    - 📜 Swagger UI (interactive) → http://127.0.0.1:8000/docs
    - 🔥 ReDoc UI (read-only) → http://127.0.0.1:8000/redoc
+
 4. To terminate the server, press `Ctrl + C` in the terminal
+
 5. To deactivate the virtual environment, run
     ```bash
     deactivate
@@ -102,6 +119,20 @@ please install the python certificates by running the following command
     /Applications/Python\ 3.x/Install\ Certificates.command
     ```
    Replace `3.x` with the version of python you are using.
+
+## Contributing
+
+1. Formatting
+   - please format the code using `black` before committing
+       ```bash
+       black .
+       ```
+   - or shortcut `option + shift + f` for mac
+   - or run the pre-commit hook
+       ```bash
+       pre-commit run --all-files
+       ```
+
 
 ## Resources
 
