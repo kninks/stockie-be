@@ -48,9 +48,3 @@ AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 # Base class for ORM models
 Base = declarative_base()
-
-
-# Get an async session for each request
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    async with AsyncSessionLocal() as session:
-        yield session

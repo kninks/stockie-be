@@ -1,8 +1,8 @@
 from fastapi import Security, Depends
 from fastapi.security.api_key import APIKeyHeader
 
-from app.config import config
-from app.exceptions.custom_exceptions import AuthError, ForbiddenError
+from app.settings.config import config
+from app.common.exceptions.custom_exceptions import AuthError, ForbiddenError
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 

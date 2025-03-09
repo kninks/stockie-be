@@ -3,7 +3,7 @@ import os
 import sys
 import json
 from logging.config import dictConfig
-from app.config import config
+from app.settings.config import config
 
 from colorlog import ColoredFormatter
 

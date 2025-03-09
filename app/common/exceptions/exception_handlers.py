@@ -3,9 +3,9 @@ import logging
 from fastapi import Request, HTTPException
 
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from app.exceptions.custom_exceptions import CustomAPIError
-from app.utils.error_codes import ErrorCodes
-from app.utils.response_handler import error_response
+from app.common.exceptions.custom_exceptions import CustomAPIError
+from app.common.utils.error_codes import ErrorCodes
+from app.common.utils.response_handler import error_response
 
 logger = logging.getLogger(__name__)
 

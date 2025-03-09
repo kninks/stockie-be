@@ -8,24 +8,85 @@
 - 🚀 [Running The Server](#running-the-server)
 - 🧪 [Testing](#testing)
 - 👾 [Troubleshooting](#troubleshooting)
+- 🤝 [Contributing](#contributing)
 - 📝 [Resources](#resources)
 
 ## Project structure
 ```
 stockie-be/
-│── app/
-│   ├── main.py
-│   ├── models/         # Database models
-│   ├── services/         # Business logic
-│   ├── routes/           # API routes
-│   ├── tests/            # Unit tests
-│   ├── utils/            # Utility functions
-│── .env                  # Environment variables
-│── requirements.txt      # Dependencies
-│── README.md
-│── pyproject.toml        # For package management
-│── Dockerfile            # Docker containerization
-│── .gitignore            # Git ignore file
+│── 📂 app                    # 🚀 Main backend application
+│   │── 📂 api                # 🌍 API Layer (Controllers & Routes)
+│   │   │── 📂 controllers    # 🎯 Controllers handle incoming requests
+│   │   │   │── client
+│   │   │   │   ├── stock_controller.py
+│   │   │   │   ├── user_controller.py
+│   │   │   │   ├── __init__.py
+│   │   │   │── ml
+│   │   │   │   ├── ml_controller.py
+│   │   │   │   ├── __init__.py
+│   │   │── 📂 routes         # 🚏 FastAPI Routers (Define API endpoints)
+│   │   │   │── client
+│   │   │   │   ├── stock_routes.py
+│   │   │   │   ├── user_routes.py
+│   │   │   │   ├── __init__.py
+│   │   │   │── ml
+│   │   │   │   ├── ml_routes.py
+│   │   │   │   ├── __init__.py
+│   │── 📂 core               # ⚙️ Application settings
+│   │   ├── config.py         # App-wide settings (DB, API keys, etc.)
+│   │   ├── database.py       # DB setup (SQLAlchemy)
+│   │   ├── logging_config.py # Logging configuration
+│   │   └── __init__.py
+│   │── 📂 models             # 🏛 ORM models (SQLAlchemy)
+│   │   │── client
+│   │   │   ├── stock_model.py
+│   │   │   ├── user_model.py
+│   │   │   ├── __init__.py
+│   │   │── ml
+│   │   │   ├── ml_model.py
+│   │   │   ├── __init__.py
+│   │── 📂 repositories       # 💾 Database queries (Repositories)
+│   │   │── client
+│   │   │   ├── stock_repository.py
+│   │   │   ├── user_repository.py
+│   │   │   ├── __init__.py
+│   │   │── ml
+│   │   │   ├── ml_repository.py
+│   │   │   ├── __init__.py
+│   │── 📂 schemas            # 📝 Pydantic Schemas (Request/Response)
+│   │   │── client
+│   │   │   ├── stock_schema.py
+│   │   │   ├── user_schema.py
+│   │   │   ├── __init__.py
+│   │   │── ml
+│   │   │   ├── ml_schema.py
+│   │   │   ├── __init__.py
+│   │── 📂 services           # 🧠 Business logic (Service layer)
+│   │   │── client
+│   │   │   ├── stock_service.py
+│   │   │   ├── user_service.py
+│   │   │   ├── __init__.py
+│   │   │── ml
+│   │   │   ├── ml_service.py
+│   │   │   ├── __init__.py
+│   │── 📂 middleware         # 🛡 Middleware (Logging, Auth, etc.)
+│   │   ├── logging_middleware.py
+│   │   ├── auth_middleware.py
+│   │   └── __init__.py
+│   │── 📂 exceptions         # ⚠️ Custom exceptions & handlers
+│   │   ├── custom_exceptions.py
+│   │   ├── exception_handlers.py
+│   │   └── __init__.py
+│   │── 📂 utils              # 🔧 Helper utilities
+│   │   ├── response_handler.py
+│   │   ├── error_codes.py
+│   │   ├── date_utils.py
+│   │   └── __init__.py
+│   │── main.py               # 🚀 FastAPI app entry point
+│── 📂 tests                  # ✅ Unit & integration tests
+│── .env                      # 📌 Environment variables
+│── requirements.txt          # 📦 Dependencies
+│── README.md                 # 📖 Project documentation
 ```
 
 ## Project setup (Local Development)
