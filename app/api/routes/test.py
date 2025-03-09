@@ -3,14 +3,15 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
-from app.auth.api_key_auth import verify_role
-from app.exceptions.custom_exceptions import (
+from app.common.dependencies.api_key_auth import verify_role
+from app.common.dependencies.get_db import get_db
+from app.common.exceptions.custom_exceptions import (
     ResourceNotFoundError,
     ForbiddenError,
 )
-from app.services.database import get_db
-from app.utils.error_codes import ErrorCodes
-from app.utils.response_handler import success_response, error_response
+
+from app.common.utils.error_codes import ErrorCodes
+from app.common.utils.response_handler import success_response, error_response
 
 
 logger = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ async def test_log():
     logger.info("This is an info message")
     logger.error("This is an error message")
     logger.critical("This is a critical message")
-    return {"test_result": "done"}
+    return await success_response()
 
 
 @router.get("/db")

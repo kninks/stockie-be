@@ -1,7 +1,9 @@
 import logging
 
 from fastapi.responses import JSONResponse
-from app.utils.error_codes import ErrorCodes
+from pydantic import BaseModel
+
+from app.common.utils.error_codes import ErrorCodes
 
 logger = logging.getLogger(__name__)
 
@@ -9,7 +11,14 @@ logger = logging.getLogger(__name__)
 async def success_response(
     data=None, message="Success", status_code=ErrorCodes.SUCCESS
 ):
-    logger.info(f"Success | Status: {status_code.value} | Message: {message}")
+    if isinstance(data, BaseModel):
+        data = data.model_dump()
+    elif isinstance(data, list) and all(isinstance(item, BaseModel) for item in data):
+        data = [item.model_dump() for item in data]
+
+    logger.info(
+        f"Success | Status: {status_code.value} | Message: {message} | Data: {data}"
+    )
 
     return JSONResponse(
         status_code=status_code.value,
