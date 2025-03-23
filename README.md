@@ -133,7 +133,7 @@ For first time setup of the project, follow the steps below:
    
 6. Create a `.env` file in the root directory and add the following environment variables
     ```env
-    DATABASE_URL=postgresql+asyncpg://neondb_owner:npg_6JtGrYNAxMW0@ep-long-violet-a1z2ze9p-pooler.ap-southeast-1.aws.neon.tech/neondb
+    DATABASE_URL=postgresql+asyncpg://... (please ask for the database URL)
     ```
 
 You're all set! 🚀
@@ -184,15 +184,11 @@ please install the python certificates by running the following command
 ## Contributing
 
 1. Formatting
-   - please format the code using `black` before committing
-       ```bash
-       black .
-       ```
-   - or shortcut `option + shift + f` for mac
-   - or run the pre-commit hook
+   - please format the code by running the pre-commit hook before committing
        ```bash
        pre-commit run --all-files
        ```
+   - or shortcut `option + shift + f` for mac
 
 
 ## Resources
