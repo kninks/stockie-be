@@ -4,15 +4,18 @@
 # import pytest
 # from app.utils.logging_config import setup_logging
 #
+#
 # @pytest.fixture(autouse=True)
 # def configure_logging():
 #     """Ensure logging is set up before each test."""
 #     setup_logging()
 #
+#
 # def test_logging_initialization():
 #     """Test if logging is initialized correctly."""
 #     logger = logging.getLogger("test_logger")
 #     assert logger is not None
+#
 #
 # def test_logging_levels():
 #     """Test that log levels work as expected."""
@@ -22,6 +25,7 @@
 #     assert logger.isEnabledFor(logging.WARNING)
 #     assert logger.isEnabledFor(logging.ERROR)
 #     assert logger.isEnabledFor(logging.CRITICAL)
+#
 #
 # def test_log_to_file():
 #     """Ensure logs are written to the file."""
@@ -33,6 +37,7 @@
 #     with open(log_file, "r") as file:
 #         log_content = file.read()
 #         assert "Test log entry" in log_content
+#
 #
 # def test_json_log_format():
 #     """Verify JSON log format is correct."""
@@ -51,6 +56,7 @@
 #         assert "message" in log_data
 #         assert log_data["message"] == "JSON log test"
 #
+#
 # def test_debug_logging_enabled(monkeypatch):
 #     """Check if debug mode enables DEBUG level logging."""
 #     monkeypatch.setattr("app.config.config.DEBUG", True)  # Force DEBUG mode
@@ -58,6 +64,7 @@
 #
 #     logger = logging.getLogger("test_logger")
 #     assert logger.isEnabledFor(logging.DEBUG)
+#
 #
 # def test_debug_logging_disabled(monkeypatch):
 #     """Check if disabling debug mode sets logging to INFO level."""
