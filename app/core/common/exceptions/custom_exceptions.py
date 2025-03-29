@@ -39,3 +39,13 @@ class BackgroundJobError(CustomAPIError):
         super().__init__(
             status_code=500, error_code=1500, message=message or f"{job_name} failed"
         )
+
+
+class MLServerError(CustomAPIError):
+    def __init__(self, message="Error contacting ML server"):
+        super().__init__(status_code=500, error_code=1600, message=message)
+
+
+class DBError(CustomAPIError):
+    def __init__(self, message="Database error"):
+        super().__init__(status_code=500, error_code=1700, message=message)

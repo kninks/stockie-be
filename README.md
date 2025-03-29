@@ -122,16 +122,7 @@ For first time setup of the project, follow the steps below:
     pip freeze > requirements.txt
     ```
    
-5. Install pre-commit hooks
-    ```bash
-    pre-commit install
-    ```
-   For any pre-commit hook updates, please run the following command
-    ```bash
-    pre-commit autoupdate
-    ```
-   
-6. Create a `.env` file in the root directory and add the following environment variables
+5. Create a `.env` file in the root directory and add the following environment variables
     ```env
     DATABASE_URL=postgresql+asyncpg://... (please ask for the database URL)
     ```
@@ -183,13 +174,28 @@ please install the python certificates by running the following command
 
 ## Contributing
 
-1. Formatting
-   - please format the code by running the pre-commit hook before committing
-       ```bash
-       pre-commit run --all-files
-       ```
-   - or shortcut `option + shift + f` for mac
+### Formatting
+- please format the code by running the pre-commit hook before committing
+    ```bash
+    pre-commit run --all-files
+    ```
+- or shortcut `option + shift + f` for mac 
+- For any pre-commit hook updates, please run the following command
+     ```bash
+     pre-commit autoupdate
+     ```
 
+### Database Migrations (with Alembic)
+This project uses Alembic to handle database schema migrations
+- Please ensure that the Alembic database URL is set in the `.env` file
+- To create a new migration, run the following command
+    ```bash
+    alembic revision --autogenerate -m "migration message"
+    ```
+- To apply the migrations, run
+    ```bash
+    alembic upgrade head
+    ```
 
 ## Resources
 
@@ -202,3 +208,10 @@ please install the python certificates by running the following command
 
 ### Logging
 - colorlog → https://pypi.org/project/colorlog/
+
+### Alembic
+- Alembic → https://alembic.sqlalchemy.org/en/latest/index.html
+
+
+
+please pass db session from the route layer so one single request will have one single db session

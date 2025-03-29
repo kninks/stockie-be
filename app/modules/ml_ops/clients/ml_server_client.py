@@ -22,7 +22,12 @@ class MLServerClient:
                     url, json=data, headers=self.headers, timeout=30
                 )
                 response.raise_for_status()
-                return response.json()
+                json_data = response.json()
+
+                if json_data.get("status") == "success":
+                    return json_data.get("data")
+                else:
+                    raise Exception(f"ML server error: {json_data.get('message')}")
         except httpx.HTTPStatusError as e:
             logger.error(
                 f"ML Server error at {url}: {e.response.status_code} - {e.response.text}"
@@ -42,7 +47,12 @@ class MLServerClient:
                     url, params=params, headers=self.headers, timeout=30
                 )
                 response.raise_for_status()
-                return response.json()
+                json_data = response.json()
+
+                if json_data.get("status") == "success":
+                    return json_data.get("data")
+                else:
+                    raise Exception(f"ML server error: {json_data.get('message')}")
         except httpx.HTTPStatusError as e:
             logger.error(
                 f"ML Server error at {url}: {e.response.status_code} - {e.response.text}"
@@ -54,24 +64,12 @@ class MLServerClient:
             )
             raise
 
-    # async def get(self, endpoint: str, params: Optional[dict[str, Any]] = None) -> Any:
-    #     url = f"{self.base_url}{endpoint}"
-    # try:
-    #     async with httpx.AsyncClient() as client:
-    #         response = await client.get(
-    #             url, params=params, headers=self.headers, timeout=30
-    #         )
-    #         response.raise_for_status()
-    #
-    #         json_data = response.json()
-    #         if json_data.get("status") == "success":
-    #             return json_data.get("data")
-    #         else:
-    #             raise Exception(f"ML server error: {json_data.get('message')}")
-    #
-    # except httpx.HTTPStatusError as e:
-    #     logger.error(f"ML Server error at {url}: {e.response.status_code} - {e.response.text}")
-    #     raise
-    # except Exception as e:
-    #     logger.exception(f"Unexpected error contacting ML server at {url}: {str(e)}")
-    #     raise
+    async def retrain_model(self, stock_name: str) -> Any:
+        endpoint = "/ml-models/retrain"
+        payload = {"stock_name": stock_name}
+        return await self.post(endpoint=endpoint, data=payload)
+
+    async def run_inference(self, stock_name: str) -> Any:
+        endpoint = "/ml-models/inference"
+        payload = {"stock_name": stock_name}
+        return await self.post(endpoint=endpoint, data=payload)

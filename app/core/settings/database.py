@@ -5,7 +5,6 @@ import ssl
 from dotenv import load_dotenv
 from sqlalchemy import Engine, event
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.orm import declarative_base
 
 # Load environment variables from .env
 load_dotenv()
@@ -42,6 +41,3 @@ def before_execute(conn, clauseelement, multiparams, params, execution_options):
 # Create the async session factory
 # Note: normal AsyncSession is for a single asynchronous database session
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
-
-# Base class for ORM models
-Base = declarative_base()

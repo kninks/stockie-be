@@ -17,7 +17,7 @@ from app.core.settings.config import config
 from app.core.settings.logging_config import setup_logging
 from app.modules.general.routes import general_routes
 from app.modules.ml_ops.routes import ml_ops_routes
-from app.modules.top_stock.routes import top_stock_routes
+from app.modules.top_prediction.routes import top_prediction_routes
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ app.exception_handler(Exception)(global_exception_handler)
 app.exception_handler(HTTPException)(http_exception_handler)
 app.exception_handler(CustomAPIError)(custom_api_exception_handler)
 
-app.include_router(top_stock_routes.router)
+app.include_router(top_prediction_routes.router)
 app.include_router(ml_ops_routes.router)
 app.include_router(general_routes.router)
 
