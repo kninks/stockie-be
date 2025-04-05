@@ -3,7 +3,6 @@ from typing import Generic, Optional, TypeVar
 
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from pydantic.generics import GenericModel
 
 from app.core.enums.error_codes_enum import ErrorCodes
 
@@ -11,7 +10,7 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-class BaseSuccessResponse(GenericModel, Generic[T]):
+class BaseSuccessResponse(BaseModel, Generic[T]):
     status: str = "success"
     message: str = "Success"
     data: Optional[T] = None

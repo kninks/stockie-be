@@ -24,7 +24,7 @@ class IndustryService:
     ):
         self.industry_repo = industry_repository
 
-    async def get_all(self, db: AsyncSession) -> List[Industry]:
+    async def get_all_industry(self, db: AsyncSession) -> List[Industry]:
         try:
             industries = await self.industry_repo.fetch_all(db=db)
         except Exception as e:
