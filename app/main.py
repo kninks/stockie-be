@@ -1,8 +1,10 @@
 import logging
+from typing import cast
 
 from fastapi import FastAPI, HTTPException
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
+from starlette.types import ExceptionHandler
 
 from app.core.common.exceptions.custom_exceptions import CustomAPIError
 from app.core.common.exceptions.exception_handlers import (
@@ -12,12 +14,13 @@ from app.core.common.exceptions.exception_handlers import (
     starlette_http_exception_handler,
 )
 from app.core.common.middleware.logging_middleware import logging_middleware_factory
-from app.core.common.middleware.role_auth_middleware import role_auth_middleware_factory
+
+# from app.core.common.middleware.role_auth_middleware import role_auth_middleware_factory
 from app.core.settings.config import config
 from app.core.settings.logging_config import setup_logging
 from app.modules.general.routes import general_routes
 from app.modules.ml_ops.routes import ml_ops_routes
-from app.modules.top_prediction.routes import top_prediction_routes
+from app.modules.public.routes import info_routes, predict_routes
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -32,7 +35,7 @@ app = FastAPI(
 )
 
 app.add_middleware(logging_middleware_factory())
-app.add_middleware(role_auth_middleware_factory())
+# app.add_middleware(role_auth_middleware_factory())
 
 app.add_middleware(
     CORSMiddleware,
@@ -42,12 +45,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.exception_handler(StarletteHTTPException)(starlette_http_exception_handler)
-app.exception_handler(Exception)(global_exception_handler)
-app.exception_handler(HTTPException)(http_exception_handler)
-app.exception_handler(CustomAPIError)(custom_api_exception_handler)
+app.add_exception_handler(
+    StarletteHTTPException, cast(ExceptionHandler, starlette_http_exception_handler)
+)
+app.add_exception_handler(Exception, cast(ExceptionHandler, global_exception_handler))
+app.add_exception_handler(HTTPException, cast(ExceptionHandler, http_exception_handler))
+app.add_exception_handler(
+    CustomAPIError, cast(ExceptionHandler, custom_api_exception_handler)
+)
 
-app.include_router(top_prediction_routes.router)
+app.include_router(info_routes.router)
+app.include_router(predict_routes.router)
 app.include_router(ml_ops_routes.router)
 app.include_router(general_routes.router)
 

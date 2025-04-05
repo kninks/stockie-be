@@ -4,14 +4,14 @@ from fastapi import HTTPException, Request
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.common.exceptions.custom_exceptions import CustomAPIError
-from app.core.common.utils.error_codes import ErrorCodes
 from app.core.common.utils.response_handlers import error_response
+from app.core.enums.error_codes_enum import ErrorCodes
 
 logger = logging.getLogger(__name__)
 
 
 async def global_exception_handler(request: Request, exc: Exception):
-    return await error_response(
+    return error_response(
         status_code=ErrorCodes.INTERNAL_SERVER_ERROR.value,
         error_code=ErrorCodes.INTERNAL_SERVER_ERROR,
         message="An unexpected internal server error occurred",
@@ -23,7 +23,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     triggered by FastAPI HTTPException when is raised inside endpoints
     """
 
-    return await error_response(
+    return error_response(
         status_code=exc.status_code,
         error_code=ErrorCodes(exc.status_code),
         message=exc.detail,
@@ -31,8 +31,14 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 
 async def custom_api_exception_handler(request: Request, exc: CustomAPIError):
-    return await error_response(
-        error_code=ErrorCodes(exc.error_code),
+    try:
+        error_code_enum = ErrorCodes(exc.error_code)
+    except ValueError:
+        logger.warning(f"Unknown error code: {exc.error_code}")
+        error_code_enum = ErrorCodes.INTERNAL_SERVER_ERROR
+
+    return error_response(
+        error_code=error_code_enum,
         message=exc.message,
         status_code=exc.status_code,
     )

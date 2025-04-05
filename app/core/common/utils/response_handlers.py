@@ -1,16 +1,23 @@
 import logging
+from typing import Generic, Optional, TypeVar
 
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from pydantic.generics import GenericModel
 
-from app.core.common.utils.error_codes import ErrorCodes
+from app.core.enums.error_codes_enum import ErrorCodes
 
 logger = logging.getLogger(__name__)
+T = TypeVar("T")
 
 
-async def success_response(
-    data=None, message="Success", status_code=ErrorCodes.SUCCESS
-):
+class BaseSuccessResponse(GenericModel, Generic[T]):
+    status: str = "success"
+    message: str = "Success"
+    data: Optional[T] = None
+
+
+def success_response(data=None, message="Success", status_code=ErrorCodes.SUCCESS):
     if isinstance(data, BaseModel):
         data = data.model_dump()
     elif isinstance(data, list) and all(isinstance(item, BaseModel) for item in data):
@@ -30,7 +37,7 @@ async def success_response(
     )
 
 
-async def error_response(
+def error_response(
     error_code: ErrorCodes, message="An error occurred", status_code=None
 ):
     if not isinstance(error_code, ErrorCodes):

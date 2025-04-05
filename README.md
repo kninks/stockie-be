@@ -113,19 +113,16 @@ For first time setup of the project, follow the steps below:
     source venv/bin/activate
     ```
    
-4. Install the dependencies
+4. Install the libraries
     ```bash
     pip install -r requirements.txt
     ```
-   For any dependency updates, please run the following command
+   For any libraries updates, please run the following command
     ```bash
     pip freeze > requirements.txt
     ```
-   
-5. Create a `.env` file in the root directory and add the following environment variables
-    ```env
-    DATABASE_URL=postgresql+asyncpg://... (please ask for the database URL)
-    ```
+
+5. Create a `.env` file in the root directory and add the environment variables (please ask for the variables from the team)
 
 You're all set! 🚀
 To start the development server, follow the next section.
@@ -141,11 +138,17 @@ To start the development server, follow the next section.
    
 2. Run the server
     ```bash
-    uvicorn app.main:app --reload
+    uvicorn app.main:app --port 8000 --reload
     ```
+   or run with the main file (no real-time reload)
+   ```bash
+   python -m app.main
+   ```
    
 3. To access the API documentation, visit
-   - 📜 Swagger UI (interactive) → http://127.0.0.1:8000/docs
+   - 📜 Swagger UI (interactive) → http://127industry_code.0.0.1:8000/docs
+     - API KEY are needed in order to call any endpoints
+     - This server's API KEY allows access to every endpoint
    - 🔥 ReDoc UI (read-only) → http://127.0.0.1:8000/redoc
 
 4. To terminate the server, press `Ctrl + C` in the terminal
@@ -179,7 +182,13 @@ please install the python certificates by running the following command
     ```bash
     pre-commit run --all-files
     ```
-- or shortcut `option + shift + f` for mac 
+  or
+    ```bash
+    black app/
+    isort app/
+    flake8 app/
+    ```
+  or shortcut `option + shift + f` for mac 
 - For any pre-commit hook updates, please run the following command
      ```bash
      pre-commit autoupdate
@@ -212,6 +221,20 @@ This project uses Alembic to handle database schema migrations
 ### Alembic
 - Alembic → https://alembic.sqlalchemy.org/en/latest/index.html
 
+## Notes
+
+### Dependency Injection (DI)
+- _**Constructor Injection**_ : complex dependencies or manage more state and logic (like services).
+- _**Static Methods with DI**_ : simple logic that just need to delegate to another layer without managing any state themselves.
 
 
-please pass db session from the route layer so one single request will have one single db session
+#### Summary for this project
+- top-prediction endpoints
+    - _**route layer**_ : Static Methods with DI for db session and auth (not for controllers)
+    - _**controller layer**_ : Static Methods with DI for services
+    - _**service layer**_ : Constructor Injection for repositories
+
+- ml-ops endpoints
+    - _**route layer**_ : Static Methods with DI for db session and auth (not for controllers)
+    - _**controller layer**_ : Static Methods with DI for services
+    - _**service layer**_ : Constructor Injection for repositories and ml client
