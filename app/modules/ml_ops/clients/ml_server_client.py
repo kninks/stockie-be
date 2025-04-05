@@ -14,62 +14,46 @@ class MLServerClient:
         self.api_key = config.ML_SERVER_API_KEY
         self.headers = {"X-API-Key": self.api_key, "Content-Type": "application/json"}
 
-    async def post(self, endpoint: str, data: Optional[dict[str, Any]] = None) -> Any:
-        url = f"{self.base_url}{endpoint}"
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    url, json=data, headers=self.headers, timeout=30
-                )
-                response.raise_for_status()
-                json_data = response.json()
-
-                if json_data.get("status") == "success":
-                    return json_data.get("data")
-                else:
-                    raise Exception(f"ML server error: {json_data.get('message')}")
-        except httpx.HTTPStatusError as e:
-            logger.error(
-                f"ML Server error at {url}: {e.response.status_code} - {e.response.text}"
-            )
-            raise
-        except Exception as e:
-            logger.exception(
-                f"Unexpected error contacting ML server at {url}: {str(e)}"
-            )
-            raise
-
     async def get(self, endpoint: str, params: Optional[dict[str, Any]] = None) -> Any:
+        return await self._request("GET", endpoint, params=params)
+
+    async def post(self, endpoint: str, data: Optional[dict[str, Any]] = None) -> Any:
+        return await self._request("POST", endpoint, json=data)
+
+    async def _request(
+        self,
+        method: str,
+        endpoint: str,
+        params: Optional[dict[str, Any]] = None,
+        json: Optional[dict[str, Any]] = None,
+    ) -> Any:
         url = f"{self.base_url}{endpoint}"
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    url, params=params, headers=self.headers, timeout=30
+            async with httpx.AsyncClient(timeout=30) as client:
+                response = await client.request(
+                    method=method,
+                    url=url,
+                    headers=self.headers,
+                    params=params,
+                    json=json,
                 )
                 response.raise_for_status()
                 json_data = response.json()
 
                 if json_data.get("status") == "success":
                     return json_data.get("data")
-                else:
-                    raise Exception(f"ML server error: {json_data.get('message')}")
+
+                logger.error(f"ML server error @ {url}: {json_data.get('message')}")
+                raise Exception(f"ML server error: {json_data.get('message')}")
+
         except httpx.HTTPStatusError as e:
             logger.error(
-                f"ML Server error at {url}: {e.response.status_code} - {e.response.text}"
+                f"[{method}] {url} -> HTTP {e.response.status_code}: {e.response.text}"
             )
-            raise
+            raise Exception(f"HTTP error {e.response.status_code}")
+        except httpx.RequestError as e:
+            logger.error(f"Network error @ {url}: {str(e)}")
+            raise Exception("Network error")
         except Exception as e:
-            logger.exception(
-                f"Unexpected error contacting ML server at {url}: {str(e)}"
-            )
+            logger.error(f"Unhandled error in MLClient @ {url}: {str(e)}")
             raise
-
-    async def retrain_model(self, stock_name: str) -> Any:
-        endpoint = "/ml-models/retrain"
-        payload = {"stock_name": stock_name}
-        return await self.post(endpoint=endpoint, data=payload)
-
-    async def run_inference(self, stock_name: str) -> Any:
-        endpoint = "/ml-models/inference"
-        payload = {"stock_name": stock_name}
-        return await self.post(endpoint=endpoint, data=payload)

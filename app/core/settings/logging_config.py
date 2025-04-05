@@ -41,7 +41,7 @@ def setup_logging():
                     "name": {
                         "DEBUG": "light_blue",
                         "INFO": "blue",
-                        "WARNING": "magenta",
+                        "WARNING": "yellow",
                         "ERROR": "purple",
                         "CRITICAL": "red",
                     },

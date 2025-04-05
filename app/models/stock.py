@@ -1,36 +1,55 @@
+from datetime import datetime
+
 from sqlalchemy import (
     Boolean,
-    Column,
     DateTime,
     ForeignKey,
-    Integer,
+    Index,
     String,
     Text,
     func,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 
 
 class Stock(Base):
     __tablename__ = "stocks"
+    __table_args__ = (Index("ix_stocks_industry_active", "industry_code", "is_active"),)
 
-    id = Column(Integer, primary_key=True)
-    ticker = Column(String, unique=True, nullable=False, index=True)
-    name = Column(String, nullable=False)
-    description = Column(Text)
-    industry_id = Column(
-        Integer,
-        ForeignKey("industries.id", name="fk_stocks_industry_id"),
+    ticker: Mapped[str] = mapped_column(String(20), primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+
+    industry_code: Mapped[str] = mapped_column(
+        ForeignKey(
+            "industries.industry_code",
+            ondelete="CASCADE",
+            name="fk_stocks_industry_code",
+        ),
         nullable=False,
-        index=True,
     )
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    modified_at = Column(
-        DateTime(timezone=True), default=func.now(), onupdate=func.now()
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default='true'
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.now(),
+        server_default=func.now(),
+    )
+    modified_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.now(),
+        onupdate=datetime.now(),
+        server_default=func.now(),
     )
 
     industry = relationship("Industry", back_populates="stocks", lazy="select")
-    predictions = relationship("Prediction", back_populates="stock", lazy="select")
+    models = relationship(
+        "StockModel", back_populates="stock", lazy="select", cascade="all, delete"
+    )
+    predictions = relationship(
+        "Prediction", back_populates="stock", lazy="select", cascade="all, delete"
+    )

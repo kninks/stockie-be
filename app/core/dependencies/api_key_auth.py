@@ -28,7 +28,6 @@ def verify_role(extra_roles: list[str] = None):
         if user_role not in allowed_roles:
             raise ForbiddenError("Unauthorized access")
 
-        # ✅ Save to request state (in case later dependencies reuse it)
         request.state.user_role = user_role
         return user_role
 
