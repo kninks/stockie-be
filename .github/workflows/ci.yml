@@ -1,0 +1,53 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        ports: ["5432:5432"]
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      ML_SERVER_URL: ${{ vars.ML_SERVER_URL }}
+      CLIENT_API_KEY: ${{ secrets.CLIENT_API_KEY }}
+      BACKEND_API_KEY: ${{ secrets.BACKEND_API_KEY }}
+      ML_SERVER_API_KEY: ${{ secrets.ML_SERVER_API_KEY }}
+      DEBUG: ${{ vars.DEBUG }}
+      LOG_LEVEL: ${{ vars.LOG_LEVEL }}
+      ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
+        run: |
+          pytest

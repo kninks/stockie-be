@@ -4,7 +4,7 @@ repos:
     hooks:
       - id: black
         args: [--config=pyproject.toml]
-        include: ^(app|tests)/.*\.py$
+        files: ^(app|tests)/.*\.py$
         exclude: ^alembic/.*\.py$
 
   - repo: https://github.com/PyCQA/isort
@@ -12,12 +12,12 @@ repos:
     hooks:
       - id: isort
         args: [--settings-path=pyproject.toml]
-        include: ^(app|tests)/.*\.py$
+        files: ^(app|tests)/.*\.py$
         exclude: ^alembic/.*\.py$
 
   - repo: https://github.com/PyCQA/flake8
     rev: 7.1.2
     hooks:
       - id: flake8
-        include: ^(app|tests)/.*\.py$
+        files: ^(app|tests)/.*\.py$
         exclude: ^alembic/.*\.py$

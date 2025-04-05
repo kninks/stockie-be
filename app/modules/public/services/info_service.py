@@ -32,7 +32,7 @@ class InfoService:
     async def get_all_industries(
         self, db: AsyncSession
     ) -> List[IndustryResponseSchema]:
-        industries = await self.industry_service.get_all(db=db)
+        industries = await self.industry_service.get_all_industry(db=db)
         industry_dict = {
             industry.industry_code: IndustryResponseSchema(
                 industry_code=IndustryCodeEnum(industry.industry_code),
