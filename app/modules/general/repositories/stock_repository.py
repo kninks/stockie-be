@@ -11,21 +11,34 @@ from app.models import (
 
 class StockRepository:
     @staticmethod
-    async def fetch_all(db: AsyncSession) -> List[Stock]:
+    async def fetch_all(db: AsyncSession) -> list[Stock]:
         stmt = select(Stock).order_by(Stock.ticker)
         result = await db.execute(stmt)
-        stocks: List[Stock] = list(result.scalars().all())
+        stocks: list[Stock] = list(result.scalars().all())
         return stocks
 
     @staticmethod
     async def fetch_active(
         db: AsyncSession, is_active: Optional[bool] = True
-    ) -> List[Stock]:
+    ) -> list[Stock]:
         stmt = (
             select(Stock).where(Stock.is_active.is_(is_active)).order_by(Stock.ticker)
         )
         result = await db.execute(stmt)
-        stocks: List[Stock] = list(result.scalars().all())
+        stocks: list[Stock] = list(result.scalars().all())
+        return stocks
+
+    @staticmethod
+    async def fetch_active_ticker_values(
+        db: AsyncSession, is_active: Optional[bool] = True
+    ) -> list[str]:
+        stmt = (
+            select(Stock.ticker)
+            .where(Stock.is_active.is_(is_active))
+            .order_by(Stock.ticker)
+        )
+        result = await db.execute(stmt)
+        stocks: list[str] = list(result.scalars().all())
         return stocks
 
     @staticmethod

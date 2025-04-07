@@ -3,7 +3,6 @@ from collections import defaultdict
 from datetime import date, timedelta
 from typing import Dict, List
 
-from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.common.exceptions.custom_exceptions import DBError
@@ -26,9 +25,7 @@ logger = logging.getLogger(__name__)
 class ClosingPriceService:
     def __init__(
         self,
-        closing_price_repository: ClosingPriceRepository = Depends(
-            ClosingPriceRepository
-        ),
+        closing_price_repository: ClosingPriceRepository,
     ):
         self.closing_price_repo = closing_price_repository
 
@@ -101,7 +98,7 @@ class ClosingPriceService:
             raise DBError("Failed to fetch closing prices") from e
 
         validate_entity_exists(prices, "Closing prices")
-        expected_total = len(stock_tickers) * days_back
+        expected_total = len(stock_tickers) * (days_back + 1)
         validate_exact_length(prices, expected_total, "closing prices")
 
         grouped: Dict[str, List[ClosingPrice]] = defaultdict(list)
@@ -179,7 +176,7 @@ class ClosingPriceService:
             raise DBError("Failed to fetch closing prices") from e
 
         validate_entity_exists(prices, "Closing prices")
-        expected_total = len(stock_tickers) * days_back
+        expected_total = len(stock_tickers) * (days_back + 1)
         validate_exact_length(prices, expected_total, "closing prices")
 
         grouped: Dict[str, List[float]] = defaultdict(list)
@@ -210,7 +207,7 @@ class ClosingPriceService:
         return price
 
     async def create_multiple(
-        self, db: AsyncSession, price_data_list: List[dict]
+        self, db: AsyncSession, price_data_list: list[dict]
     ) -> List[ClosingPrice]:
         validate_required(price_data_list, "closing price data list")
         try:
@@ -250,3 +247,7 @@ class ClosingPriceService:
 
         logger.info(f"Deleted {deleted_count} closing prices before {cutoff_date}")
         return deleted_count
+
+
+def get_closing_price_service() -> ClosingPriceService:
+    return ClosingPriceService(closing_price_repository=ClosingPriceRepository())

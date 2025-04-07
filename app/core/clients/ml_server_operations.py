@@ -1,17 +1,15 @@
 import logging
 from typing import Any, Awaitable, Callable, List
 
-from fastapi import Depends
-
+from app.core.clients.ml_server_client import MLServerClient
 from app.core.common.exceptions.custom_exceptions import MLServerError
-from app.modules.ml_ops.clients.ml_server_client import MLServerClient
 from app.modules.ml_ops.schemas.inference_schema import StockToPredictRequestSchema
 
 logger = logging.getLogger(__name__)
 
 
 class MLServerOperations:
-    def __init__(self, client: MLServerClient = Depends(MLServerClient)):
+    def __init__(self, client: MLServerClient):
         self.client = client
 
     @staticmethod
@@ -35,3 +33,7 @@ class MLServerOperations:
             data=payload,
             error_message="Failed to trigger inference",
         )
+
+
+def get_ml_server_operations() -> MLServerOperations:
+    return MLServerOperations(client=MLServerClient())

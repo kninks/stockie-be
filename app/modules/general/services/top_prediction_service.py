@@ -1,7 +1,6 @@
 import logging
 from datetime import date, timedelta
 
-from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.common.exceptions.custom_exceptions import DBError
@@ -22,9 +21,7 @@ logger = logging.getLogger(__name__)
 class TopPredictionService:
     def __init__(
         self,
-        top_prediction_repository: TopPredictionRepository = Depends(
-            TopPredictionRepository
-        ),
+        top_prediction_repository: TopPredictionRepository,
     ):
         self.top_prediction_repo = top_prediction_repository
 
@@ -122,3 +119,7 @@ class TopPredictionService:
 
         logger.info(f"Deleted {deleted_count} top predictions older than {cutoff_date}")
         return deleted_count
+
+
+def get_top_prediction_service() -> TopPredictionService:
+    return TopPredictionService(top_prediction_repository=TopPredictionRepository())

@@ -11,7 +11,6 @@ from app.core.common.exceptions.custom_exceptions import (
 from app.core.common.utils.response_handlers import success_response
 from app.core.dependencies.api_key_auth import verify_role
 from app.core.dependencies.db_session import get_db
-from app.core.enums.roles_enum import RoleEnum
 
 logger = logging.getLogger(__name__)
 
@@ -20,13 +19,6 @@ router = APIRouter(
     tags=["General"],
     dependencies=[Depends(verify_role([]))],
 )
-
-
-@router.get("/health")
-async def health_check(
-    user_role: str = Depends(verify_role([RoleEnum.ML_SERVER.value])),
-):
-    return success_response(message="Backend is healthy", data={"role": user_role})
 
 
 @router.get("/log")

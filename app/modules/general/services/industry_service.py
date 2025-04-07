@@ -1,7 +1,6 @@
 import logging
 from typing import List
 
-from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.common.exceptions.custom_exceptions import DBError
@@ -20,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 class IndustryService:
     def __init__(
-        self, industry_repository: IndustryRepository = Depends(IndustryRepository)
+        self,
+        industry_repository: IndustryRepository,
     ):
         self.industry_repo = industry_repository
 
@@ -75,3 +75,7 @@ class IndustryService:
         validate_entity_exists(industries, f"Industries for codes {industry_codes}")
         validate_exact_length(industries, len(industry_codes), "industries")
         return industries
+
+
+def get_industry_service() -> IndustryService:
+    return IndustryService(industry_repository=IndustryRepository())

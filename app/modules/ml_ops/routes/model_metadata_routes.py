@@ -8,6 +8,7 @@ from app.core.common.utils.response_handlers import (
 from app.core.dependencies.db_session import get_db
 from app.modules.ml_ops.controllers.model_metadata_controller import (
     ModelMetadataController,
+    get_model_metadata_controller,
 )
 from app.modules.ml_ops.schemas.model_metadata_schema import (
     ModelMetadataResponseSchema,
@@ -16,14 +17,14 @@ from app.modules.ml_ops.schemas.model_metadata_schema import (
 
 router = APIRouter(
     prefix="/model-metadata",
-    tags=["Model Metadata"],
+    tags=["[ml-ops] Model Metadata"],
 )
 
 
 @router.get("", response_model=BaseSuccessResponse[list[ModelMetadataResponseSchema]])
 async def get_model_metadate_route(
     stock_tickers: list[str] = Query(...),
-    controller: ModelMetadataController = Depends(),
+    controller: ModelMetadataController = Depends(get_model_metadata_controller),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -38,7 +39,7 @@ async def get_model_metadate_route(
 @router.post("", response_model=BaseSuccessResponse[None])
 async def save_model_metadata_route(
     request: SaveModelMetadataRequestSchema,
-    controller: ModelMetadataController = Depends(),
+    controller: ModelMetadataController = Depends(get_model_metadata_controller),
     db: AsyncSession = Depends(get_db),
 ):
     """
