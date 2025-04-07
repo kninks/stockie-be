@@ -1,7 +1,6 @@
 import logging
 from typing import List
 
-from fastapi.params import Depends
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,9 +24,19 @@ logger = logging.getLogger(__name__)
 class StockModelService:
     def __init__(
         self,
-        stock_model_repository: StockModelRepository = Depends(StockModelRepository),
+        stock_model_repository: StockModelRepository,
     ):
         self.stock_model_repo = stock_model_repository
+
+    async def get_active(self, db: AsyncSession) -> List[StockModel]:
+        try:
+            stock_models = await self.stock_model_repo.fetch_active(db=db)
+        except Exception as e:
+            logger.error(f"Failed to fetch active stock models: {e}")
+            raise DBError("Failed to fetch active stock models") from e
+
+        validate_entity_exists(stock_models, "Active stock models")
+        return stock_models
 
     async def get_by_id(self, db: AsyncSession, stock_model_id: int) -> StockModel:
         validate_required(stock_model_id, "stock model id")
@@ -248,3 +257,7 @@ class StockModelService:
         #
         # logger.info(f"Updated {updated_count} predictions.")
         # return updated_count
+
+
+def get_stock_model_service() -> StockModelService:
+    return StockModelService(stock_model_repository=StockModelRepository())

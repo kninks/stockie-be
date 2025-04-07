@@ -1,13 +1,5 @@
 from pydantic import BaseModel
 
-from app.core.enums.industry_code_enum import IndustryCodeEnum
-from app.core.enums.period_enum import PeriodEnum
-
-
-class PredictRequestSchema(BaseModel):
-    industry: IndustryCodeEnum
-    period: PeriodEnum
-
 
 class TopPredictionRankSchema(BaseModel):
     rank: int
@@ -16,5 +8,5 @@ class TopPredictionRankSchema(BaseModel):
     closing_price: float
 
 
-class PredictResponseSchema(BaseModel):
-    ranked_stocks: list[TopPredictionRankSchema]
+class GetTopPredictionResponseSchema(BaseModel):
+    ranked_predictions: list[TopPredictionRankSchema]

@@ -1,8 +1,6 @@
 import logging
 from datetime import date, timedelta
-from typing import List
 
-from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.common.exceptions.custom_exceptions import DBError, ResourceNotFoundError
@@ -18,7 +16,10 @@ from app.core.common.utils.validators import (
 from app.core.enums.industry_code_enum import IndustryCodeEnum
 from app.models import Prediction
 from app.modules.general.repositories.prediction_repository import PredictionRepository
-from app.modules.general.services.closing_price_service import ClosingPriceService
+from app.modules.general.services.closing_price_service import (
+    ClosingPriceService,
+    get_closing_price_service,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +27,8 @@ logger = logging.getLogger(__name__)
 class PredictionService:
     def __init__(
         self,
-        prediction_repository: PredictionRepository = Depends(PredictionRepository),
-        closing_price_service: ClosingPriceService = Depends(ClosingPriceService),
+        prediction_repository: PredictionRepository,
+        closing_price_service: ClosingPriceService,
     ):
         self.prediction_repo = prediction_repository
         self.closing_price_service = closing_price_service
@@ -47,8 +48,8 @@ class PredictionService:
         return prediction
 
     async def get_by_ids(
-        self, db: AsyncSession, prediction_ids: List[int]
-    ) -> List[Prediction]:
+        self, db: AsyncSession, prediction_ids: list[int]
+    ) -> list[Prediction]:
         validate_required(prediction_ids, "prediction IDs")
 
         try:
@@ -107,8 +108,8 @@ class PredictionService:
         db: AsyncSession,
         target_date: date,
         period: int,
-        stock_tickers: List[str],
-    ) -> List[Prediction]:
+        stock_tickers: list[str],
+    ) -> list[Prediction]:
         validate_required(stock_tickers, "stock tickers")
         validate_required(target_date, "target date")
         validate_required(period, "period")
@@ -149,7 +150,7 @@ class PredictionService:
         target_date: date,
         period: int,
         industry_code: str,
-    ) -> List[Prediction]:
+    ) -> list[Prediction]:
         validate_required(industry_code, "industry code")
         validate_enum_input(industry_code, IndustryCodeEnum, "industry code")
         validate_required(target_date, "target date")
@@ -184,8 +185,8 @@ class PredictionService:
         db: AsyncSession,
         target_date: date,
         period: int,
-        industry_codes: List[str],
-    ) -> List[Prediction]:
+        industry_codes: list[str],
+    ) -> list[Prediction]:
         validate_required(industry_codes, "industry codes")
         validate_enum_input(industry_codes, IndustryCodeEnum, "industry codes")
         validate_required(target_date, "target date")
@@ -223,23 +224,27 @@ class PredictionService:
     async def create_by_list(
         self,
         db: AsyncSession,
-        prediction_data_list: List[dict],
+        prediction_data_list: list[dict],
         refresh: bool = True,
-    ) -> List[Prediction]:
+    ) -> list[Prediction]:
         validate_required(prediction_data_list, "prediction data")
         prediction_data_list = normalize_stock_tickers_in_data(prediction_data_list)
+        logger.warning(f"prediction_data_list: {prediction_data_list}")
 
         try:
             prediction_data_list = normalize_stock_tickers_in_data(prediction_data_list)
+            print(prediction_data_list)
             if len(prediction_data_list) == 1:
                 prediction = await self.prediction_repo.create_one(
                     db=db, prediction_data=prediction_data_list[0], refresh=refresh
                 )
                 predictions = [prediction] if prediction else []
+                logger.warning(f"prediction: {prediction}")
             else:
                 predictions = await self.prediction_repo.create_multiple(
                     db=db, prediction_data_list=prediction_data_list, refresh=refresh
                 )
+                logger.warning(f"predictions: {predictions}")
         except Exception as e:
             logger.error(f"Failed to create predictions: {e}")
             raise DBError("Failed to create predictions") from e
@@ -273,7 +278,7 @@ class PredictionService:
             raise ResourceNotFoundError(f"Prediction {prediction_id} not found")
 
     async def update_batch_rank_and_top_prediction(
-        self, db: AsyncSession, updates: List[dict]
+        self, db: AsyncSession, updates: list[dict]
     ) -> int:
         """
         updates with a list of {id, rank, top_prediction_id}
@@ -328,3 +333,10 @@ class PredictionService:
 
         logger.info(f"Deleted {deleted_count} predictions older than {cutoff_date}")
         return deleted_count
+
+
+def get_prediction_service() -> PredictionService:
+    return PredictionService(
+        prediction_repository=PredictionRepository(),
+        closing_price_service=get_closing_price_service(),
+    )

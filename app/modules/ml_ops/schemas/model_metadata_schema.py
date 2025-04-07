@@ -10,7 +10,7 @@ class ModelMetadataResponseSchema(BaseModel):
     accuracy: float
     model_path: str
     scaler_path: str
-    additional_data: dict
+    additional_data: Optional[dict] = None
 
 
 class SaveModelMetadataRequestSchema(BaseModel):

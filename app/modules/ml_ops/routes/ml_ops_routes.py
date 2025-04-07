@@ -10,10 +10,9 @@ from app.modules.ml_ops.routes import (
 
 router = APIRouter(
     prefix="/ml-ops",
-    tags=["ML Operations"],
     dependencies=[Depends(verify_role([RoleEnum.ML_SERVER.value]))],
 )
 
-router.include_router(model_metadata_routes.router)
-router.include_router(inference_routes.router)
 router.include_router(evaluation_routes.router)
+router.include_router(inference_routes.router)
+router.include_router(model_metadata_routes.router)

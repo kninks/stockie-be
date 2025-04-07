@@ -4,10 +4,17 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+class TriggerAllInferenceRequestSchema(BaseModel):
+    target_date: date
+    days_back: int
+    days_forward: Optional[int]
+
+
 class TriggerInferenceRequestSchema(BaseModel):
     stock_tickers: list[str]
     target_date: date
     days_back: int
+    days_forward: Optional[int]
 
 
 class StockToPredictRequestSchema(BaseModel):
@@ -19,7 +26,7 @@ class StockToPredictRequestSchema(BaseModel):
 
 
 class InferenceResultSchema(BaseModel):
-    stock_ticker: int
+    stock_ticker: str
     model_id: int
     target_date: date
     predicted_price: Optional[list[float]] = None

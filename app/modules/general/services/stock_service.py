@@ -1,7 +1,6 @@
 import logging
 from typing import List, Optional
 
-from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.common.exceptions.custom_exceptions import DBError
@@ -21,10 +20,10 @@ logger = logging.getLogger(__name__)
 
 
 class StockService:
-    def __init__(self, stock_repository: StockRepository = Depends(StockRepository)):
+    def __init__(self, stock_repository: StockRepository):
         self.stock_repo = stock_repository
 
-    async def get_all(self, db: AsyncSession) -> List[Stock]:
+    async def get_all(self, db: AsyncSession) -> list[Stock]:
         try:
             stocks = await self.stock_repo.fetch_all(db=db)
         except Exception as e:
@@ -36,7 +35,7 @@ class StockService:
 
     async def get_active(
         self, db: AsyncSession, is_active: Optional[bool] = True
-    ) -> List[Stock]:
+    ) -> list[Stock]:
         try:
             stocks = await self.stock_repo.fetch_active(db=db, is_active=is_active)
         except Exception as e:
@@ -46,6 +45,22 @@ class StockService:
         validate_entity_exists(stocks, "Active stocks")
         if is_active:
             validate_exact_length(stocks, 40, "active stocks")
+        return stocks
+
+    async def get_active_ticker_values(
+        self, db: AsyncSession, is_active: Optional[bool] = True
+    ) -> list[str]:
+        try:
+            stocks = await self.stock_repo.fetch_active_ticker_values(
+                db=db, is_active=is_active
+            )
+        except Exception as e:
+            logger.error(f"Failed to fetch active stock ticker values: {e}")
+            raise DBError("Failed to fetch active stock ticker values") from e
+
+        validate_entity_exists(stocks, "Active stock ticker values")
+        if is_active:
+            validate_exact_length(stocks, 40, "active stock ticker values")
         return stocks
 
     async def get_by_ticker(self, db: AsyncSession, stock_ticker: str) -> Stock:
@@ -137,3 +152,7 @@ class StockService:
                 stocks, 5 * len(industry_codes), "stocks by industry codes"
             )
         return stocks
+
+
+def get_stock_service() -> StockService:
+    return StockService(stock_repository=StockRepository())

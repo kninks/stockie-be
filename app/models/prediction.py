@@ -37,7 +37,6 @@ class Prediction(Base):
     target_date: Mapped[date] = mapped_column(Date(), nullable=False)
     period: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    predicted_price: Mapped[float] = mapped_column(Float, nullable=False)
     closing_price: Mapped[float] = mapped_column(Float, nullable=True)
     closing_price_id: Mapped[int] = mapped_column(
         ForeignKey(
@@ -47,6 +46,7 @@ class Prediction(Base):
         ),
         nullable=True,
     )
+    predicted_price: Mapped[float] = mapped_column(Float, nullable=False)
 
     rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
     top_prediction_id: Mapped[int | None] = mapped_column(
