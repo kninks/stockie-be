@@ -128,6 +128,18 @@ For first time setup of the project, follow the steps below:
 You're all set! 🚀
 To start the development server, follow the next section.
 
+### Running docker locally
+
+1. pull the img
+2. compose up docker dev (no need to run in python venv)
+
+    ```bash
+    docker-compose -f docker-compose.dev.yml up --build
+    ```
+3. simulate prod env
+    ```bash
+    docker-compose -f docker-compose.prod.yml up --build
+    ```
 
 ## Running the server
 

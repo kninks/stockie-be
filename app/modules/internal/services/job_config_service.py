@@ -3,8 +3,7 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.clients.discord_client import DiscordOperations, get_discord_operations
-
-# from app.core.clients.redis_client import redis_client
+from app.core.clients.redis_client import redis_client
 from app.core.common.utils.validators import (
     validate_entity_exists,
     validate_exact_length,
@@ -23,21 +22,21 @@ class JobConfigService:
         self,
         job_config_repository: JobConfigRepository,
         discord: DiscordOperations,
-        # redis_client_instance=redis_client,
+        redis_client_instance=redis_client,
     ):
         self.job_config_repository = job_config_repository
         self.discord = discord
-        # self.redis_client = redis_client_instance
+        self.redis_client = redis_client_instance
 
     async def get_job_config(
         self, db: AsyncSession, key: JobConfigEnum
     ) -> str | int | bool:
         validate_required(key, "key")
-        # cache_key = f"config:{key}"
-        # cached = await self.redis_client.get(cache_key)
-        #
-        # if cached is not None:
-        #     return self.smart_cast(cached)
+        cache_key = f"config:{key}"
+        cached = await self.redis_client.get(cache_key)
+
+        if cached is not None:
+            return self.smart_cast(cached)
 
         config = await self.job_config_repository.fetch_by_key(db=db, key=key)
         validate_entity_exists(config, "config")
@@ -80,20 +79,20 @@ class JobConfigService:
             mention_everyone=True,
         )
 
-        # await self.invalidate_job_config_cache(key)
+        await self.invalidate_job_config_cache(key)
         return result.value
 
     async def invalidate_job_config_cache(self, key: JobConfigEnum):
-        # await self.redis_client.delete(f"config:{key}")
+        await self.redis_client.delete(f"config:{key}")
         pass
 
     async def invalidate_all_job_config_caches(self):
-        # keys = [key async for key in redis_client.scan_iter(match="config:*")]
-        # if keys:
-        #     await self.redis_client.delete(*keys)
-        #     logger.info(f"✅ Invalidated {len(keys)} config cache keys.")
-        # else:
-        #     logger.info("ℹ️ No config cache keys found to invalidate.")
+        keys = [key async for key in redis_client.scan_iter(match="config:*")]
+        if keys:
+            await self.redis_client.delete(*keys)
+            logger.info(f"✅ Invalidated {len(keys)} config cache keys.")
+        else:
+            logger.info("ℹ️ No config cache keys found to invalidate.")
         pass
 
     @staticmethod

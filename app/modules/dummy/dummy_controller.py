@@ -6,8 +6,8 @@ from app.modules.dummy.dummy_service import DummyService, get_dummy_service
 
 
 class DummyController:
-    def __init__(self, dummy_service: DummyService):
-        self.dummy_service = dummy_service
+    def __init__(self, service: DummyService):
+        self.dummy_service = service
 
     async def generate_dummy_inference_results_all_controller(
         self,
@@ -43,4 +43,4 @@ class DummyController:
 
 
 def get_dummy_controller() -> DummyController:
-    return DummyController(dummy_service=get_dummy_service())
+    return DummyController(service=get_dummy_service())
