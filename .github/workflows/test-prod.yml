@@ -13,6 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Docker Compose
+        run: |
+          curl -L https://github.com/docker/compose/releases/download/2.34.0/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+
+
       - name: Build production image
         run: docker-compose -f docker-compose.prod.yml up --build -d
 
