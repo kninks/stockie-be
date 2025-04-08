@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: CD Pipeline
 
 on:
   workflow_run:
@@ -43,6 +43,7 @@ jobs:
           docker push $IMAGE_NAME:$TAG
           
           echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
+          echo "::set-output name=image_tag::$TAG"
 
       - name: Create and push Git tag
         run: |
