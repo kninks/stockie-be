@@ -24,11 +24,19 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
       ML_SERVER_URL: ${{ vars.ML_SERVER_URL }}
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      REDIS_HOST: ${{ secrets.REDIS_HOST }}
+      REDIS_PORT: ${{ secrets.REDIS_PORT }}
+      REDIS_DB: ${{ secrets.REDIS_DB }}
+
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       CLIENT_API_KEY: ${{ secrets.CLIENT_API_KEY }}
       BACKEND_API_KEY: ${{ secrets.BACKEND_API_KEY }}
       ML_SERVER_API_KEY: ${{ secrets.ML_SERVER_API_KEY }}
+
       DEBUG: ${{ vars.DEBUG }}
       LOG_LEVEL: ${{ vars.LOG_LEVEL }}
       ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
@@ -48,7 +56,4 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests
-        env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
-        run: |
-          pytest
+        run: pytest

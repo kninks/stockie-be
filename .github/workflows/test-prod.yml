@@ -1,0 +1,23 @@
+name: Test Production Image
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test-prod:
+    name: Run Tests on Docker Prod Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build production image
+        run: docker-compose -f docker-compose.prod.yml up --build -d
+
+      - name: Run tests inside container
+        run: docker exec stockie-backend pytest
+
+      - name: Stop containers
+        run: docker-compose -f docker-compose.prod.yml down
