@@ -12,18 +12,18 @@ from app.modules.internal.controllers.internal_controller import (
 )
 from app.modules.internal.routes import cleanup_data_routes, job_config_routes
 from app.modules.internal.schemas.internal_schema import (
-    PullFeaturesRequestSchema,
+    PullTradingDataRequestSchema,
     RankPredictionsRequestSchema,
 )
 
 router = APIRouter(
     prefix="/internal",
-    tags=["Internal"],
+    # tags=["Internal"],
     dependencies=[Depends(verify_role([]))],
 )
 
 
-@router.post("/rank-predictions")
+@router.post("/rank-predictions", tags=["Internal"])
 async def rank_predictions_route(
     request: RankPredictionsRequestSchema,
     controller: InternalController = Depends(get_internal_controller),
@@ -33,13 +33,13 @@ async def rank_predictions_route(
     return success_response()
 
 
-@router.post("/pull-features")
-async def pull_features_route(
-    request: PullFeaturesRequestSchema,
+@router.post("/pull-trading-data", tags=["Internal"])
+async def pull_trading_data_route(
+    request: PullTradingDataRequestSchema,
     controller: InternalController = Depends(get_internal_controller),
     db: AsyncSession = Depends(get_db),
 ):
-    await controller.pull_features_controller(request=request, db=db)
+    await controller.pull_trading_data_controller(request=request, db=db)
     return success_response()
 
 

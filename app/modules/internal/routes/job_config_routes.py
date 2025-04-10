@@ -12,6 +12,7 @@ from app.modules.internal.schemas.job_config_schema import ConfigUpdateRequest
 
 router = APIRouter(
     prefix="/config",
+    tags=["Job Config"],
 )
 
 

@@ -22,12 +22,12 @@ async def job_run_and_save_inference():
             db,
             [
                 JobConfigEnum.RUN_INFERENCE_CIRCUIT_BREAKER,
-                JobConfigEnum.LAST_SUCCESS_PULL_FEATURES,
+                JobConfigEnum.LAST_SUCCESS_PULL_TRADING_DATA,
                 JobConfigEnum.RUN_INFERENCE_DAYS_BACK,
                 JobConfigEnum.RUN_INFERENCE_DAYS_FORWARD,
             ],
         )
-        circuit_breaker = configs[JobConfigEnum.RUN_INFERENCE_CIRCUIT_BREAKER]
+        circuit_breaker = bool(configs[JobConfigEnum.RUN_INFERENCE_CIRCUIT_BREAKER])
         if circuit_breaker:
             await discord.notify_discord_job_status(
                 status=JobStatusEnum.SKIPPED,
@@ -38,9 +38,7 @@ async def job_run_and_save_inference():
             )
             return
 
-        if date(
-            configs[JobConfigEnum.LAST_SUCCESS_PULL_FEATURES]
-        ) < datetime.now() - timedelta(hours=6):
+        if configs[JobConfigEnum.LAST_SUCCESS_PULL_TRADING_DATA] < datetime.now() - timedelta(hours=6):
             await discord.notify_discord_job_status(
                 status=JobStatusEnum.SKIPPED,
                 job_type=JobTypeEnum.INFERENCE,
@@ -115,9 +113,7 @@ async def job_rank_predictions():
             )
             return
 
-        if date(
-            configs[JobConfigEnum.LAST_SUCCESS_INFERENCE]
-        ) < datetime.now() - timedelta(hours=6):
+        if configs[JobConfigEnum.LAST_SUCCESS_INFERENCE] < datetime.now() - timedelta(hours=6):
             await discord.notify_discord_job_status(
                 status=JobStatusEnum.SKIPPED,
                 job_type=JobTypeEnum.RANK,

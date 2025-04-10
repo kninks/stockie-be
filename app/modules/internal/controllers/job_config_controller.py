@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.enums.job_enum import JobConfigEnum
@@ -16,14 +18,14 @@ class JobConfigController:
         self,
         key: JobConfigEnum,
         db: AsyncSession,
-    ) -> str | int | bool:
+    ) -> str | int | bool | list[int] | datetime:
         return await self.service.get_job_config(db=db, key=key)
 
     async def get_job_configs_controller(
         self,
         keys: list[JobConfigEnum],
         db: AsyncSession,
-    ) -> list[dict[JobConfigEnum, str | int | bool]]:
+    ) -> dict[JobConfigEnum, str | int | bool | list[int] | datetime]:
         response = await self.service.get_job_configs(db=db, keys=keys)
         return response
 
@@ -31,7 +33,7 @@ class JobConfigController:
         self,
         request: ConfigUpdateRequest,
         db: AsyncSession,
-    ):
+    ) -> str | int | bool | list[int] | datetime:
         return await self.service.set_job_config(
             db=db, key=request.key, value=request.value
         )

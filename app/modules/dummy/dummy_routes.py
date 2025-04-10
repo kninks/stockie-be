@@ -37,15 +37,15 @@ async def insert_stock(
     return success_response(data=response)
 
 
-@router.post("/features")
-async def dummy_features(
+@router.post("/trading-data")
+async def dummy_trading_data(
     stock_tickers: list[str] = Query(...),
     target_date: date = Query(...),
     days_back: int = Query(...),
     db: AsyncSession = Depends(get_db),
     controller: DummyController = Depends(get_dummy_controller),
 ):
-    response = await controller.generate_dummy_features_controller(
+    response = await controller.generate_dummy_trading_data_controller(
         db=db,
         stock_tickers=stock_tickers,
         end_date=target_date,

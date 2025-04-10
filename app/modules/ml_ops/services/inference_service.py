@@ -11,14 +11,10 @@ from app.core.clients.ml_server_operations import (
 )
 from app.core.common.exceptions.custom_exceptions import MLServerError
 from app.core.common.utils.validators import validate_required
-from app.core.enums.features_enum import FeatureEnum
 from app.core.enums.job_enum import JobTypeEnum
-from app.models import Feature, Prediction
+from app.core.enums.trading_data_enum import TradingDataEnum
+from app.models import Prediction, TradingData
 from app.modules.dummy.dummy_service import DummyService, get_dummy_service
-from app.modules.general.services.feature_service import (
-    FeatureService,
-    get_feature_service,
-)
 from app.modules.general.services.prediction_service import (
     PredictionService,
     get_prediction_service,
@@ -28,6 +24,10 @@ from app.modules.general.services.stock_model_service import (
     get_stock_model_service,
 )
 from app.modules.general.services.stock_service import StockService, get_stock_service
+from app.modules.general.services.trading_data_service import (
+    TradingDataService,
+    get_trading_data_service,
+)
 from app.modules.ml_ops.schemas.inference_schema import (
     InferenceResultSchema,
     StockToPredictRequestSchema,
@@ -42,7 +42,7 @@ class InferenceService:
         stock_service: StockService,
         stock_model_service: StockModelService,
         prediction_service: PredictionService,
-        feature_service: FeatureService,
+        trading_data_service: TradingDataService,
         dummy_service: DummyService,
         ml_operations: MLServerOperations,
         discord_operations: DiscordOperations,
@@ -50,7 +50,7 @@ class InferenceService:
         self.stock_service = stock_service
         self.stock_model_service = stock_model_service
         self.prediction_service = prediction_service
-        self.feature_service = feature_service
+        self.trading_data_service = trading_data_service
         self.dummy_service = dummy_service
         self.ml = ml_operations
         self.discord = discord_operations
@@ -214,42 +214,54 @@ class InferenceService:
             db=db, stock_tickers=stock_tickers
         )
 
-        features_list: list[Feature] = (
-            await self.feature_service.get_by_stock_tickers_and_date_range(
+        trading_data_list: list[TradingData] = (
+            await self.trading_data_service.get_by_stock_tickers_and_date_range(
                 db=db,
                 stock_tickers=stock_tickers,
                 target_date=target_date,
                 days_back=days_back,
             )
         )
-        features_map = defaultdict(
-            lambda: {"feature_id": [], FeatureEnum.CLOSE: [], FeatureEnum.VOLUMES: []}
+        trading_data_map = defaultdict(
+            lambda: {
+                "trading_data_id": [],
+                TradingDataEnum.CLOSE: [],
+                TradingDataEnum.VOLUMES: [],
+            }
         )
-        for feature in features_list:
+        for trading_data in trading_data_list:
             # id of the day before the target date
             # closing prices and volumes up until the target date (includes the target date)
-            features_map[feature.stock_ticker]["feature_id"].append(feature.id)
-            features_map[feature.stock_ticker][FeatureEnum.CLOSE].append(feature.close)
-            features_map[feature.stock_ticker][FeatureEnum.VOLUMES].append(
-                feature.volumes
+            trading_data_map[trading_data.stock_ticker]["trading_data_id"].append(
+                trading_data.id
+            )
+            trading_data_map[trading_data.stock_ticker][TradingDataEnum.CLOSE].append(
+                trading_data.close
+            )
+            trading_data_map[trading_data.stock_ticker][TradingDataEnum.VOLUMES].append(
+                trading_data.volumes
             )
 
         inference_data = [
             StockToPredictRequestSchema(
                 stock_ticker=model.stock_ticker,
-                feature_id=(
-                    features_map[model.stock_ticker]["feature_id"][-2]
-                    if len(features_map[model.stock_ticker]["feature_id"]) > 1
+                trading_data_id=(
+                    trading_data_map[model.stock_ticker]["trading_data_id"][-2]
+                    if len(trading_data_map[model.stock_ticker]["trading_data_id"]) > 1
                     else None
                 ),
                 close=(
-                    features_map[model.stock_ticker][FeatureEnum.CLOSE][:days_back]
-                    if FeatureEnum.CLOSE in model.features_used
+                    trading_data_map[model.stock_ticker][TradingDataEnum.CLOSE][
+                        :days_back
+                    ]
+                    if TradingDataEnum.CLOSE in model.features_used
                     else []
                 ),
                 volumes=(
-                    features_map[model.stock_ticker][FeatureEnum.VOLUMES][:days_back]
-                    if FeatureEnum.VOLUMES in model.features_used
+                    trading_data_map[model.stock_ticker][TradingDataEnum.VOLUMES][
+                        :days_back
+                    ]
+                    if TradingDataEnum.VOLUMES in model.features_used
                     else []
                 ),
                 model_id=model.id,
@@ -316,7 +328,7 @@ class InferenceService:
                             "period": period,
                             "predicted_price": res.predicted_price[period],
                             "closing_price": meta.close[-1],
-                            "feature_id": meta.feature_id,
+                            "trading_data_id": meta.trading_data_id,
                         }
                     )
 
@@ -328,7 +340,7 @@ def get_inference_service() -> InferenceService:
         stock_service=get_stock_service(),
         stock_model_service=get_stock_model_service(),
         prediction_service=get_prediction_service(),
-        feature_service=get_feature_service(),
+        trading_data_service=get_trading_data_service(),
         dummy_service=get_dummy_service(),
         ml_operations=get_ml_server_operations(),
         discord_operations=get_discord_operations(),

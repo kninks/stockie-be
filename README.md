@@ -130,15 +130,35 @@ To start the development server, follow the next section.
 
 ### Running docker locally
 
-1. pull the img
-2. compose up docker dev (no need to run in python venv)
+For this repo, mostly you will want to compose up the docker only when you want to test the scheduler or job config
 
+- Prerequisite: Make sure you have Docker/Orb stack installed and running
+   - [Docker Desktop](https://www.docker.com/products/docker-desktop)
+   - [Docker CLI](https://docs.docker.com/engine/install/)
+   - [Docker Compose](https://docs.docker.com/compose/install/)
+
+1. Pull the img
+2. Compose up docker dev if you have never built the image or no changes are made to the Dockerfile (no need to run in python venv).
+
+   If you have already built the docker image, and no changes are made to the Dockerfile, you can skip the build step
     ```bash
     docker-compose -f docker-compose.dev.yml up --build
     ```
-3. simulate prod env
+    simulate prod env
     ```bash
     docker-compose -f docker-compose.prod.yml up --build
+    ```
+3. Compose up docker dev if you have already built the image and no changes are made to the Dockerfile
+    ```bash
+    docker-compose -f docker-compose.dev.yml up
+    ```
+    simulate prod env
+    ```bash
+    docker-compose -f docker-compose.prod.yml up
+    ```
+4. compose down
+    ```bash
+    docker-compose -f docker-compose.dev.yml down
     ```
 
 ## Running the server

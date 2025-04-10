@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +19,15 @@ logger = logging.getLogger(__name__)
 
 
 class JobConfigService:
+    LIST_KEYS = {JobConfigEnum.SAVE_INFERENCE_PERIODS}
+    DATE_KEYS = {
+        JobConfigEnum.LAST_SUCCESS_PULL_TRADING_DATA,
+        JobConfigEnum.LAST_SUCCESS_RANK,
+        JobConfigEnum.LAST_SUCCESS_CLEANUP,
+        JobConfigEnum.LAST_SUCCESS_INFERENCE,
+        JobConfigEnum.LAST_SUCCESS_EVALUATION,
+    }
+
     def __init__(
         self,
         job_config_repository: JobConfigRepository,
@@ -30,36 +40,34 @@ class JobConfigService:
 
     async def get_job_config(
         self, db: AsyncSession, key: JobConfigEnum
-    ) -> str | int | bool:
+    ) -> str | int | bool | list[int] | datetime :
         validate_required(key, "key")
         cache_key = f"config:{key}"
         cached = await self.redis_client.get(cache_key)
 
         if cached is not None:
-            return self.smart_cast(cached)
+            logger.debug(f"Cache hit for key {key}")
+            return self._smart_cast(key=key, value=cached)
 
         config = await self.job_config_repository.fetch_by_key(db=db, key=key)
         validate_entity_exists(config, "config")
-        return self.smart_cast(config.value)
+        return self._smart_cast(key=config.key,value=config.value)
 
     async def get_job_configs(
         self, db: AsyncSession, keys: list[JobConfigEnum]
-    ) -> list[dict[JobConfigEnum, str | int | bool]]:
+    ) -> dict[JobConfigEnum, str | int | bool | list[int] | datetime]:
         validate_required(keys, "keys")
 
         if len(keys) == 1:
             config = await self.job_config_repository.fetch_by_key(db=db, key=keys[0])
             configs_dict = (
-                [{JobConfigEnum(config.key): self.smart_cast(config.value)}]
+                [{JobConfigEnum(config.key): self._smart_cast(key=config.key, value=config.value)}]
                 if config
                 else []
             )
         else:
             configs = await self.job_config_repository.fetch_by_keys(db=db, keys=keys)
-            configs_dict = [
-                {JobConfigEnum(config.key): self.smart_cast(config.value)}
-                for config in configs
-            ]
+            configs_dict = {JobConfigEnum(config.key): self._smart_cast(key=config.key,value=config.value) for config in configs}
 
         validate_entity_exists(configs_dict, "configs_dict")
         validate_exact_length(configs_dict, len(keys), "configs_dict")
@@ -67,7 +75,7 @@ class JobConfigService:
 
     async def set_job_config(
         self, db: AsyncSession, key: JobConfigEnum, value: str
-    ) -> str | int | bool:
+    ) -> str | int | bool | list[int] | datetime:
         validate_required(key, "key")
         validate_required(value, "value")
         result = await self.job_config_repository.upsert(db, key, value)
@@ -96,10 +104,20 @@ class JobConfigService:
         pass
 
     @staticmethod
-    def smart_cast(value: str) -> str | int | bool:
-        if value.lower() in {"true", "false"}:
+    def _smart_cast(key: str, value: str) -> str | int | bool | list[int] | datetime:
+        if key in JobConfigService.LIST_KEYS:
+            return [
+                int(item.strip()) for item in value.split(",") if item.strip().isdigit()
+            ]
+            # return eval(value)
+        elif key in JobConfigService.DATE_KEYS:
+            try:
+                return datetime.fromisoformat(value)
+            except ValueError:
+                return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+        elif value.lower() in {"true", "false"}:
             return value.lower() == "true"
-        if value.isdigit():
+        elif value.isdigit():
             return int(value)
         return value
 

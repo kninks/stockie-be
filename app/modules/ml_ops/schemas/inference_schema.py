@@ -21,7 +21,7 @@ class TriggerInferenceRequestSchema(BaseModel):
 
 class StockToPredictRequestSchema(BaseModel):
     stock_ticker: str
-    feature_id: Optional[int] = None
+    trading_data_id: Optional[int] = None
     close: list[float]
     volumes: Optional[list[int]] = []
     model_id: int

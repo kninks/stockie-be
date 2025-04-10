@@ -16,9 +16,9 @@ from app.core.common.utils.validators import (
 from app.core.enums.industry_code_enum import IndustryCodeEnum
 from app.models import Prediction
 from app.modules.general.repositories.prediction_repository import PredictionRepository
-from app.modules.general.services.feature_service import (
-    FeatureService,
-    get_feature_service,
+from app.modules.general.services.trading_data_service import (
+    TradingDataService,
+    get_trading_data_service,
 )
 
 logger = logging.getLogger(__name__)
@@ -28,10 +28,10 @@ class PredictionService:
     def __init__(
         self,
         prediction_repository: PredictionRepository,
-        feature_service: FeatureService,
+        trading_data_service: TradingDataService,
     ):
         self.prediction_repo = prediction_repository
-        self.feature_service = feature_service
+        self.trading_data_service = trading_data_service
 
     async def get_by_id(self, db: AsyncSession, prediction_id: int) -> Prediction:
         validate_required(prediction_id, "prediction ID")
@@ -277,5 +277,5 @@ class PredictionService:
 def get_prediction_service() -> PredictionService:
     return PredictionService(
         prediction_repository=PredictionRepository(),
-        feature_service=get_feature_service(),
+        trading_data_service=get_trading_data_service(),
     )

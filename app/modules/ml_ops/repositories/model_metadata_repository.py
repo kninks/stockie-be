@@ -6,6 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.common.exceptions.custom_exceptions import DBError
+from app.core.enums.trading_data_enum import TradingDataEnum
 from app.models import StockModel
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ class ModelMetadataRepository:
         accuracy: float,
         model_path: str,
         scaler_path: str,
-        features_used: list[str],
+        features_used: list[TradingDataEnum],
         additional_data: Optional[dict] = None,
     ) -> StockModel:
         try:

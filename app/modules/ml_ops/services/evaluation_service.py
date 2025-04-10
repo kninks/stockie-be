@@ -4,15 +4,15 @@ from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.clients.discord_client import DiscordOperations, get_discord_operations
-from app.modules.general.services.feature_service import (
-    FeatureService,
-    get_feature_service,
-)
 from app.modules.general.services.prediction_service import (
     PredictionService,
     get_prediction_service,
 )
 from app.modules.general.services.stock_service import StockService, get_stock_service
+from app.modules.general.services.trading_data_service import (
+    TradingDataService,
+    get_trading_data_service,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,12 +22,12 @@ class EvaluationService:
         self,
         discord_operations: DiscordOperations,
         stock_service: StockService,
-        feature_service: FeatureService,
+        trading_data_service: TradingDataService,
         prediction_service: PredictionService,
     ):
         self.discord = discord_operations
         self.stock_service = stock_service
-        self.feature_service = feature_service
+        self.trading_service = trading_data_service
         self.prediction_service = prediction_service
 
     # TODO
@@ -104,6 +104,6 @@ def get_evaluation_service() -> EvaluationService:
     return EvaluationService(
         discord_operations=get_discord_operations(),
         stock_service=get_stock_service(),
-        feature_service=get_feature_service(),
+        trading_data_service=get_trading_data_service(),
         prediction_service=get_prediction_service(),
     )

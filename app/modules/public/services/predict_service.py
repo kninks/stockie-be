@@ -40,12 +40,11 @@ class PredictService:
         self.prediction_service = prediction_service
         self.top_prediction_service = top_prediction_service
 
-    # TODO: Check
     async def get_top_prediction(
         self, industry: IndustryCodeEnum, period: int, db: AsyncSession
     ) -> GetTopPredictionResponseSchema:
         # target_date = date.today()
-        target_date = date(2025, 3, 28)  # temporary
+        target_date = date(2025, 4, 10)  # temporary
         try:
             top_prediction = await self.predict_repo.fetch_top_prediction(
                 db=db,

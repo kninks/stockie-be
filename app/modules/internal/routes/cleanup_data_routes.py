@@ -12,6 +12,7 @@ from app.modules.internal.controllers.cleanup_data_controller import (
 
 router = APIRouter(
     prefix="/clean",
+    tags=["Cleanup Data"],
 )
 
 
@@ -20,13 +21,13 @@ async def clean_data_route(
     db: AsyncSession = Depends(get_db),
     controller: CleanupDataController = Depends(get_cleanup_data_controller),
     target_date: date = Query(...),
-    features_days_back: int = Query(),
+    trading_days_back: int = Query(),
     predictions_days_back: int = Query(),
 ):
     await controller.clean_data_controller(
         db=db,
         target_date=target_date,
-        features_days_back=features_days_back,
+        trading_data_days_back=trading_days_back,
         predictions_days_back=predictions_days_back,
     )
     return success_response()
@@ -39,7 +40,7 @@ async def clean_features_route(
     target_date: date = Query(...),
     days_back: int = Query(),
 ):
-    await controller.clean_features_controller(
+    await controller.clean_trading_data_controller(
         target_date=target_date, days_back=days_back, db=db
     )
     return success_response()
