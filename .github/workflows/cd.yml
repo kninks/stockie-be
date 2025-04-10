@@ -81,7 +81,6 @@ jobs:
           image: asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-backend:${{ needs.build.outputs.image_tag }}
           region: asia-southeast1
           env_vars: |
-            PORT=8000
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             ML_SERVER_URL=${{ secrets.ML_SERVER_URL }}
             DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}
