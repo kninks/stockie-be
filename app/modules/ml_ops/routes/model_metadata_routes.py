@@ -36,7 +36,7 @@ async def get_model_metadate_route(
     return success_response(data=response)
 
 
-@router.post("", response_model=BaseSuccessResponse[None])
+@router.post("")
 async def save_model_metadata_route(
     request: SaveModelMetadataRequestSchema,
     controller: ModelMetadataController = Depends(get_model_metadata_controller),
@@ -49,4 +49,4 @@ async def save_model_metadata_route(
         request=request,
         db=db,
     )
-    return success_response()
+    return success_response(data=None)

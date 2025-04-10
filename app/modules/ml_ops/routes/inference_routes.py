@@ -14,6 +14,7 @@ from app.modules.ml_ops.controllers.inference_controller import (
     get_inference_controller,
 )
 from app.modules.ml_ops.schemas.inference_schema import (
+    InferenceResultSchema,
     StockToPredictRequestSchema,
     TriggerAllInferenceRequestSchema,
     TriggerInferenceRequestSchema,
@@ -25,33 +26,37 @@ router = APIRouter(
 )
 
 
-@router.post("/trigger-infer-and-save/all", response_model=BaseSuccessResponse[None])
+@router.post("/trigger-infer-and-save/all")
 async def trigger_infer_and_save_all_route(
     request: TriggerAllInferenceRequestSchema,
     controller: InferenceController = Depends(get_inference_controller),
     db: AsyncSession = Depends(get_db),
 ):
     await controller.infer_and_save_all(request=request, db=db)
-    return success_response()
+    return success_response(data=None)
 
 
-@router.post("/trigger-infer-and-save", response_model=BaseSuccessResponse[None])
+@router.post("/trigger-infer-and-save")
 async def trigger_infer_and_save_route(
     request: TriggerInferenceRequestSchema,
     controller: InferenceController = Depends(get_inference_controller),
     db: AsyncSession = Depends(get_db),
 ):
     await controller.infer_and_save(request=request, db=db)
-    return success_response()
+    return success_response(data=None)
 
 
-@router.post("/trigger-infer")
+@router.post(
+    "/trigger-infer", response_model=BaseSuccessResponse[list[InferenceResultSchema]]
+)
 async def trigger_infer_only_route(
     request: TriggerInferenceRequestSchema,
     controller: InferenceController = Depends(get_inference_controller),
     db: AsyncSession = Depends(get_db),
 ):
-    response = await controller.infer_only(request=request, db=db)
+    response: list[InferenceResultSchema] = await controller.infer_only(
+        request=request, db=db
+    )
     return success_response(data=response)
 
 

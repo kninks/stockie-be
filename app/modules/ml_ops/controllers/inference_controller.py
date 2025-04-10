@@ -27,6 +27,7 @@ class InferenceController:
             target_date=request.target_date,
             days_back=request.days_back,
             days_forward=request.days_forward,
+            periods=request.periods,
             db=db,
         )
         return response
@@ -41,6 +42,7 @@ class InferenceController:
             target_date=request.target_date,
             days_back=request.days_back,
             days_forward=request.days_forward,
+            periods=request.periods,
             db=db,
         )
         return response

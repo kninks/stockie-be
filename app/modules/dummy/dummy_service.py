@@ -1,12 +1,18 @@
 import random
-from datetime import date
+from collections import defaultdict
+from datetime import date, timedelta
+from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.common.exceptions.custom_exceptions import DBError
 from app.core.common.utils.validators import (
+    normalize_stock_ticker,
     normalize_stock_tickers,
     validate_required,
 )
+from app.core.enums.industry_code_enum import IndustryCodeEnum
+from app.models import Feature, Stock
 from app.modules.general.services.feature_service import (
     FeatureService,
     get_feature_service,
@@ -30,87 +36,154 @@ class DummyService:
         self.stock_model_service = stock_model_service
         self.feature_service = feature_service
 
-    # async def generate_dummy_inference_results_all(
-    #     self,
-    #     db: AsyncSession,
-    #     target_date: date,
-    #     days_back: int,
-    #     days_forward: int,
-    # ) -> list[InferenceResultSchema]:
-    #     all_stock_tickers = await self.stock_service.get_active_ticker_values(db=db)
-    #     return await self.generate_dummy_inference_results(
-    #         db=db,
-    #         stock_tickers=all_stock_tickers,
-    #         target_date=target_date,
-    #         days_back=days_back,
-    #         days_forward=days_forward,
-    #     )
-    #
-    # async def generate_dummy_inference_results(
-    #     self,
-    #     db: AsyncSession,
-    #     stock_tickers: list[str],
-    #     target_date: date,
-    #     days_back: int,
-    #     days_forward: int,
-    # ) -> list[InferenceResultSchema]:
-    #     validate_required(stock_tickers, "stock_tickers")
-    #     validate_required(target_date, "target_date")
-    #     validate_required(days_back, "days_back")
-    #     validate_required(days_forward, "days_forward")
-    #     stock_tickers = normalize_stock_tickers(stock_tickers)
-    #
-    #     all_models = await self.stock_model_service.get_active(db=db)
-    #     all_features = (
-    #         await self.feature_service.get_by_stock_tickers_and_date_range(
-    #             stock_tickers=stock_tickers,
-    #             target_date=target_date,
-    #             days_back=days_back,
-    #             db=db,
-    #         )
-    #     )
-    #
-    #     features_lookup = { feature.stock_ticker: feature for feature in all_features }
-    #
-    #     inference_results = []
-    #
-    #     for model in all_models:
-    #         ticker = model.stock_ticker
-    #         model_id = model.id
-    #         feature_item = features_lookup.get(ticker)
-    #
-    #         actual_closing_price = feature_item.close[-2]
-    #         # closing_price_id = actual_closing_price_item.id
-    #         predicted_prices = [
-    #             actual_closing_price + random.uniform(-5, 5)
-    #             for i in range(days_forward + 1)
-    #         ]
-    #
-    #         # print("model_id", model_id, "for ticker", ticker)
-    #         # print(
-    #         #     "target date",
-    #         #     target_date,
-    #         #     ": id",
-    #         #     closing_price_id,
-    #         #     "=",
-    #         #     actual_closing_price,
-    #         # )
-    #         # print("actual_closing_prices_list")
-    #         # print([a.closing_price for a in actual_closing_prices_list[:days_back]])
-    #         # print("predicted_prices")
-    #         # print(predicted_prices)
-    #
-    #         inference_result = InferenceResultSchema(
-    #             stock_ticker=ticker,
-    #             model_id=model_id,
-    #             target_date=target_date,
-    #             predicted_price=predicted_prices,
-    #             success=True,
-    #             error_message=None,
-    #         )
-    #         inference_results.append(inference_result)
-    #
-    #     return inference_results
+    async def insert_stock(
+        self,
+        db: AsyncSession,
+        stock_ticker: str,
+        industry_code: IndustryCodeEnum,
+        stock_name: str,
+        stock_description: Optional[str] = None,
+    ) -> Stock:
+        validate_required(stock_ticker, "stock_ticker")
+        validate_required(industry_code, "industry_code")
+        validate_required(stock_name, "stock_name")
+        normalized_stock_ticker = normalize_stock_ticker(stock_ticker)
+
+        stock = await self.stock_service.get_by_ticker(
+            db=db,
+            stock_ticker=normalized_stock_ticker,
+        )
+        if stock:
+            DBError(f"Stock already exists: {stock.ticker}")
+
+        created_stock = await self.stock_service.create_stock(
+            db=db,
+            stock_ticker=stock_ticker,
+            stock_name=stock_name,
+            stock_description=stock_description,
+            industry_code=industry_code,
+        )
+
+        return created_stock
+
+    @staticmethod
+    async def generate_dummy_features(
+        db: AsyncSession,
+        stock_tickers: list[str],
+        end_date: date,
+        days_back: int,
+    ) -> list[Feature]:
+        data_to_insert = []
+        for ticker in stock_tickers:
+            price = random.uniform(120, 200)
+            for i in range(days_back):
+                target_date = end_date - timedelta(days=days_back - i - 1)
+                closing_price = price + random.uniform(-5, 5)
+                opening_price = closing_price + random.uniform(-2, 2)
+                high = max(opening_price, closing_price) + random.uniform(0, 3)
+                low = min(opening_price, closing_price) - random.uniform(0, 3)
+                volumes = random.randint(1000, 10000)
+                price = round(max(price, 80), 2)
+                data_to_insert.append(
+                    Feature(
+                        stock_ticker=ticker,
+                        target_date=target_date,
+                        close=closing_price,
+                        open=opening_price,
+                        high=high,
+                        low=low,
+                        volumes=volumes,
+                    )
+                )
+        db.add_all(data_to_insert)
+        await db.commit()
+
+        return data_to_insert
+
+    async def generate_dummy_inference_results_all(
+        self,
+        db: AsyncSession,
+        target_date: date,
+        days_back: int,
+        days_forward: int,
+    ) -> list[InferenceResultSchema]:
+        all_stock_tickers = await self.stock_service.get_active_ticker_values(db=db)
+        return await self.generate_dummy_inference_results(
+            db=db,
+            stock_tickers=all_stock_tickers,
+            target_date=target_date,
+            days_back=days_back,
+            days_forward=days_forward,
+        )
+
+    async def generate_dummy_inference_results(
+        self,
+        db: AsyncSession,
+        stock_tickers: list[str],
+        target_date: date,
+        days_back: int,
+        days_forward: int,
+    ) -> list[InferenceResultSchema]:
+        validate_required(stock_tickers, "stock_tickers")
+        validate_required(target_date, "target_date")
+        validate_required(days_back, "days_back")
+        validate_required(days_forward, "days_forward")
+        stock_tickers = normalize_stock_tickers(stock_tickers)
+
+        all_models = await self.stock_model_service.get_active_by_stock_tickers(
+            db=db, stock_tickers=stock_tickers
+        )
+        all_features_all_stocks = (
+            await self.feature_service.get_by_stock_tickers_and_date_range(
+                stock_tickers=stock_tickers,
+                target_date=target_date,
+                days_back=days_back,
+                db=db,
+            )
+        )
+
+        features_lookup = defaultdict(list[Feature])
+        for feature in all_features_all_stocks:
+            features_lookup[feature.stock_ticker].append(feature)
+
+        inference_results = []
+        for model in all_models:
+            ticker = model.stock_ticker
+            feature_item_list: list[Feature] = features_lookup.get(ticker)
+
+            target_date_yesterday_feature_item = feature_item_list[-2]
+            yesterday_actual_closing_price = target_date_yesterday_feature_item.close
+
+            # feature_id = target_date_yesterday_feature_item.id
+            predicted_prices = [
+                yesterday_actual_closing_price + random.uniform(-5, 5)
+                for i in range(days_forward + 1)
+            ]
+
+            # print("model_id", model_id, "for ticker", ticker)
+            # print(
+            #     "target date",
+            #     target_date,
+            #     ": id",
+            #     feature_id,
+            #     "=",
+            #     yesterday_actual_closing_price,
+            # )
+            # print("feature_item_list")
+            # print([a.close for a in feature_item_list[:days_back]])
+            # print("predicted_prices")
+            # print(predicted_prices)
+
+            inference_result = InferenceResultSchema(
+                stock_ticker=ticker,
+                target_date=target_date,
+                predicted_price=predicted_prices,
+                success=True,
+                error_message=None,
+            )
+            inference_results.append(inference_result)
+
+        return inference_results
 
 
 def get_dummy_service() -> DummyService:

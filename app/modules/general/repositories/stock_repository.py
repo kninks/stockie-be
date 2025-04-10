@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -50,13 +50,13 @@ class StockRepository:
 
     @staticmethod
     async def fetch_by_tickers(
-        db: AsyncSession, stock_tickers: List[str]
-    ) -> List[Stock]:
+        db: AsyncSession, stock_tickers: list[str]
+    ) -> list[Stock]:
         stmt = (
             select(Stock).where(Stock.ticker.in_(stock_tickers)).order_by(Stock.ticker)
         )
         result = await db.execute(stmt)
-        stocks: List[Stock] = list(result.scalars().all())
+        stocks: list[Stock] = list(result.scalars().all())
         return stocks
 
     @staticmethod
@@ -72,13 +72,13 @@ class StockRepository:
         )
 
         result = await db.execute(stmt)
-        stocks: List[Stock] = list(result.scalars().all())
+        stocks: list[Stock] = list(result.scalars().all())
         return stocks
 
     @staticmethod
     async def fetch_by_industry_codes(
         db: AsyncSession,
-        industry_codes: List[IndustryCodeEnum],
+        industry_codes: list[IndustryCodeEnum],
         is_active: Optional[bool] = True,
     ) -> list[Stock]:
         stmt = (
@@ -89,5 +89,24 @@ class StockRepository:
             .order_by(Stock.ticker)
         )
         result = await db.execute(stmt)
-        stocks: List[Stock] = list(result.scalars().all())
+        stocks: list[Stock] = list(result.scalars().all())
         return stocks
+
+    @staticmethod
+    async def create_stock(
+        db: AsyncSession,
+        stock_ticker: str,
+        industry_code: IndustryCodeEnum,
+        stock_name: str,
+        stock_description: Optional[str] = None,
+    ) -> Stock:
+        stock = Stock(
+            ticker=stock_ticker,
+            name=stock_name,
+            description=stock_description,
+            industry_code=industry_code,
+        )
+        db.add(stock)
+        await db.commit()
+        await db.refresh(stock)
+        return stock

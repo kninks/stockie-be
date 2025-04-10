@@ -56,41 +56,6 @@ async def job_features():
                 mention_everyone=True,
             )
 
-    # if config.PULL_PRICES_TIME_HOUR:
-    #     await discord.notify_discord_job_status(
-    #         status=JobStatusEnum.SKIPPED,
-    #         job_type=JobTypeEnum.PULL_PRICES,
-    #         custom_message="Skip reason: circuit breaker flag.",
-    #         is_critical=False,
-    #         mention_everyone=False,
-    #     )
-    #     return
-    #
-    # target_date = date.today()
-    #
-    # try:
-    #     async with AsyncSessionLocal() as db:
-    #         await internal_service.pull_closing_prices_all(
-    #             db=db,
-    #             target_date=target_date,
-    #         )
-    #
-    #     job_last_success[JobTypeEnum.PULL_PRICES] = datetime.now()
-    #     await discord.notify_discord_job_status(
-    #         status=JobStatusEnum.SUCCESS,
-    #         job_type=JobTypeEnum.PULL_PRICES,
-    #         is_critical=False,
-    #         mention_everyone=False,
-    #     )
-    # except Exception as e:
-    #     await discord.notify_discord_job_status(
-    #         status=JobStatusEnum.FAILED,
-    #         job_type=JobTypeEnum.PULL_PRICES,
-    #         custom_message=str(e),
-    #         is_critical=True,
-    #         mention_everyone=True,
-    #     )
-
 
 def register_evaluation_job():
     from app.schedulers.scheduler import scheduler

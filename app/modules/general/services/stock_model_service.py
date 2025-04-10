@@ -200,6 +200,7 @@ class StockModelService:
     #
     #     try:
     #         model_data_list = normalize_stock_tickers_in_data(model_data_list)
+    #         normalize_stock_tickers(model_data_list)
     #         return await self.stock_model_repo.create_multiple(
     #             db=db, model_data_list=model_data_list
     #         )

@@ -26,7 +26,6 @@ async def accuracy_route(
     """
     Evaluate the accuracy of the model.
     """
-    # Placeholder for actual implementation
     response = await controller.accuracy_all_controller(
         target_date=target_date, days_back=days_back, db=db
     )
@@ -44,7 +43,6 @@ async def accuracy_all_route(
     """
     Evaluate the accuracy of the model.
     """
-    # Placeholder for actual implementation
     response = await controller.accuracy_controller(
         stock_tickers=stock_tickers, target_date=target_date, days_back=days_back, db=db
     )
