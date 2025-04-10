@@ -1,5 +1,5 @@
 import logging
-from contextlib import asynccontextmanager
+# from contextlib import asynccontextmanager
 from typing import cast
 
 from fastapi import FastAPI, HTTPException
@@ -25,23 +25,23 @@ from app.modules.dummy import dummy_routes
 from app.modules.internal.routes import internal_routes
 from app.modules.ml_ops.routes import ml_ops_routes
 from app.modules.public.routes import public_routes
-from app.schedulers.scheduler import register_all_jobs, start_scheduler
+# from app.schedulers.scheduler import register_all_jobs, start_scheduler
 
 setup_logging()
 logger = logging.getLogger(__name__)
 logger.setLevel(config.LOG_LEVEL)
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    logger.info("🔁 Lifespan startup...")
-
-    register_all_jobs()
-    start_scheduler()
-
-    yield  # 🚀 app is now running
-
-    logger.info("🛑 Lifespan shutdown...")
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     logger.info("🔁 Lifespan startup...")
+#
+#     register_all_jobs()
+#     start_scheduler()
+#
+#     yield  # 🚀 app is now running
+#
+#     logger.info("🛑 Lifespan shutdown...")
 
 
 app = FastAPI(
@@ -50,7 +50,7 @@ app = FastAPI(
     version="1.0.0",
     debug=config.DEBUG,
     root_path="/api",
-    lifespan=lifespan,
+    # lifespan=lifespan,
 )
 
 app.add_middleware(logging_middleware_factory())
