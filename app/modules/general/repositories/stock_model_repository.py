@@ -21,6 +21,7 @@ class StockModelRepository:
         "model_path",
         "scaler_path",
         "is_active",
+        "features_used",
         "additional_data",
     }
 
@@ -190,7 +191,7 @@ class StockModelRepository:
 
     @staticmethod
     async def update_by_stock_tickers(
-        db: AsyncSession, stock_tickers: List[str], update_data: dict
+        db: AsyncSession, stock_tickers: list[str], update_data: dict
     ) -> int:
         stock_model = await StockModelRepository.fetch_active_by_stock_tickers(
             db, stock_tickers

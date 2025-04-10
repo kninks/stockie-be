@@ -8,6 +8,7 @@ from app.core.common.utils.validators import (
     validate_entity_exists,
     validate_required,
 )
+from app.core.enums.features_enum import FeatureEnum
 from app.models import StockModel
 from app.modules.general.services.stock_model_service import (
     StockModelService,
@@ -48,6 +49,7 @@ class ModelMetadataService:
                 accuracy=model.accuracy,
                 model_path=model.model_path,
                 scaler_path=model.scaler_path,
+                features_used=[FeatureEnum(feature) for feature in model.features_used],
                 additional_data=model.additional_data,
             )
             for model in models
@@ -61,6 +63,7 @@ class ModelMetadataService:
         accuracy: float,
         model_path: str,
         scaler_path: str,
+        features_used: list[FeatureEnum],
         additional_data: Optional[dict],
         db: AsyncSession,
     ) -> StockModel:
@@ -69,9 +72,11 @@ class ModelMetadataService:
         validate_required(accuracy, "Accuracy")
         validate_required(model_path, "Model path")
         validate_required(scaler_path, "Scaler path")
+        validate_required(features_used, "Features")
         stock_ticker = normalize_stock_ticker(stock_ticker)
 
         try:
+            features_used_str = [feature.value for feature in features_used]
             model = await self.model_metadata_repo.update_and_create_model_metadata(
                 db=db,
                 stock_ticker=stock_ticker,
@@ -79,6 +84,7 @@ class ModelMetadataService:
                 accuracy=accuracy,
                 model_path=model_path,
                 scaler_path=scaler_path,
+                features_used=features_used_str,
                 additional_data=additional_data,
             )
         except Exception as e:

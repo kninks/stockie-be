@@ -2,9 +2,9 @@ from datetime import date
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.general.services.closing_price_service import (
-    ClosingPriceService,
-    get_closing_price_service,
+from app.modules.general.services.feature_service import (
+    FeatureService,
+    get_feature_service,
 )
 from app.modules.general.services.prediction_service import (
     PredictionService,
@@ -19,11 +19,11 @@ from app.modules.general.services.top_prediction_service import (
 class CleanupDataService:
     def __init__(
         self,
-        closing_price_service: ClosingPriceService,
+        feature_service: FeatureService,
         prediction_service: PredictionService,
         top_prediction_service: TopPredictionService,
     ):
-        self.closing_price_service = closing_price_service
+        self.feature_service = feature_service
         self.prediction_service = prediction_service
         self.top_prediction_service = top_prediction_service
 
@@ -31,11 +31,11 @@ class CleanupDataService:
         self,
         db: AsyncSession,
         target_date: date,
-        closing_prices_days_back: int,
+        features_days_back: int,
         predictions_days_back: int,
     ) -> None:
-        await self.clean_closing_prices(
-            db=db, target_date=target_date, days_back=closing_prices_days_back
+        await self.clean_features(
+            db=db, target_date=target_date, days_back=features_days_back
         )
         await self.clean_predictions(
             db=db, target_date=target_date, days_back=predictions_days_back
@@ -45,7 +45,7 @@ class CleanupDataService:
         )
 
     # TODO
-    async def clean_closing_prices(
+    async def clean_features(
         self, db: AsyncSession, target_date: date, days_back: int
     ) -> None:
         pass
@@ -65,7 +65,7 @@ class CleanupDataService:
 
 def get_cleanup_data_service() -> CleanupDataService:
     return CleanupDataService(
-        closing_price_service=get_closing_price_service(),
+        feature_service=get_feature_service(),
         prediction_service=get_prediction_service(),
         top_prediction_service=get_top_prediction_service(),
     )

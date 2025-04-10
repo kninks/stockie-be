@@ -19,7 +19,8 @@ class TriggerInferenceRequestSchema(BaseModel):
 
 class StockToPredictRequestSchema(BaseModel):
     stock_ticker: str
-    closing_prices: list[float]
+    close: list[float]
+    volumes: Optional[list[int]]
     model_id: int
     model_path: str
     scaler_path: str

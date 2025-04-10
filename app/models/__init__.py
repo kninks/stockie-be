@@ -1,5 +1,5 @@
 from .base import Base
-from .closing_price import ClosingPrice
+from .feature import Feature
 from .industry import Industry
 from .job_config import JobConfig
 from .prediction import Prediction

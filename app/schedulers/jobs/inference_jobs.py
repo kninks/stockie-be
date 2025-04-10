@@ -22,7 +22,7 @@ async def job_run_and_save_inference():
             db,
             [
                 JobConfigEnum.RUN_INFERENCE_CIRCUIT_BREAKER,
-                JobConfigEnum.LAST_SUCCESS_PULL_PRICES,
+                JobConfigEnum.LAST_SUCCESS_PULL_FEATURES,
                 JobConfigEnum.RUN_INFERENCE_DAYS_BACK,
                 JobConfigEnum.RUN_INFERENCE_DAYS_FORWARD,
             ],
@@ -39,7 +39,7 @@ async def job_run_and_save_inference():
             return
 
         if date(
-            configs[JobConfigEnum.LAST_SUCCESS_PULL_PRICES]
+            configs[JobConfigEnum.LAST_SUCCESS_PULL_FEATURES]
         ) < datetime.now() - timedelta(hours=6):
             await discord.notify_discord_job_status(
                 status=JobStatusEnum.SKIPPED,
