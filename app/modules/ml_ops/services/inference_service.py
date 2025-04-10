@@ -11,11 +11,11 @@ from app.core.clients.ml_server_operations import (
 from app.core.common.exceptions.custom_exceptions import MLServerError
 from app.core.common.utils.validators import validate_required
 from app.core.enums.job_enum import JobTypeEnum
-from app.models import Prediction
+from app.models import Feature, Prediction
 from app.modules.dummy.dummy_service import DummyService, get_dummy_service
-from app.modules.general.services.closing_price_service import (
-    ClosingPriceService,
-    get_closing_price_service,
+from app.modules.general.services.feature_service import (
+    FeatureService,
+    get_feature_service,
 )
 from app.modules.general.services.prediction_service import (
     PredictionService,
@@ -40,7 +40,7 @@ class InferenceService:
         stock_service: StockService,
         stock_model_service: StockModelService,
         prediction_service: PredictionService,
-        closing_price_service: ClosingPriceService,
+        feature_service: FeatureService,
         dummy_service: DummyService,
         ml_operations: MLServerOperations,
         discord_operations: DiscordOperations,
@@ -48,7 +48,7 @@ class InferenceService:
         self.stock_service = stock_service
         self.stock_model_service = stock_model_service
         self.prediction_service = prediction_service
-        self.closing_price_service = closing_price_service
+        self.feature_service = feature_service
         self.dummy_service = dummy_service
         self.ml = ml_operations
         self.discord = discord_operations
@@ -99,6 +99,7 @@ class InferenceService:
                 db=db,
             )
         )
+        pass
 
         # inference_results: list[InferenceResultSchema] = (
         #     await self._make_run_inference_request_to_ml_server(
@@ -107,36 +108,36 @@ class InferenceService:
         #     )
         # )
 
-        inference_results: list[InferenceResultSchema] = (
-            await self.dummy_service.generate_dummy_inference_results(
-                db=db,
-                stock_tickers=stock_tickers,
-                target_date=target_date,
-                days_back=days_back,
-                days_forward=days_forward,
-            )
-        )
-
-        success_results = [i for i in inference_results if i.success]
-        failed_results = [i for i in inference_results if not i.success]
-        if failed_results:
-            failed_tickers = [res.stock_ticker for res in failed_results]
-            await self.discord.send_discord_message(
-                message=f"ML inference failed for: {failed_tickers}",
-                job_name=JobTypeEnum.INFERENCE.value,
-                is_critical=True,
-                mention_everyone=True,
-            )
-            logger.error(f"ML inference failed for: {failed_tickers}")
-            raise MLServerError(f"ML inference failed for: {failed_tickers}")
-
-        saved_predictions = await self._save_success_inference_results(
-            inference_data=inference_data,
-            success_results=success_results,
-            db=db,
-        )
-
-        return saved_predictions
+        # inference_results: list[InferenceResultSchema] = (
+        #     await self.dummy_service.generate_dummy_inference_results(
+        #         db=db,
+        #         stock_tickers=stock_tickers,
+        #         target_date=target_date,
+        #         days_back=days_back,
+        #         days_forward=days_forward,
+        #     )
+        # )
+        #
+        # success_results = [i for i in inference_results if i.success]
+        # failed_results = [i for i in inference_results if not i.success]
+        # if failed_results:
+        #     failed_tickers = [res.stock_ticker for res in failed_results]
+        #     await self.discord.send_discord_message(
+        #         message=f"ML inference failed for: {failed_tickers}",
+        #         job_name=JobTypeEnum.INFERENCE.value,
+        #         is_critical=True,
+        #         mention_everyone=True,
+        #     )
+        #     logger.error(f"ML inference failed for: {failed_tickers}")
+        #     raise MLServerError(f"ML inference failed for: {failed_tickers}")
+        #
+        # saved_predictions = await self._save_success_inference_results(
+        #     inference_data=inference_data,
+        #     success_results=success_results,
+        #     db=db,
+        # )
+        #
+        # return saved_predictions
 
     # FIXME: Add error handling
     async def run_inference_by_stock_tickers(
@@ -206,17 +207,27 @@ class InferenceService:
         active_models = await self.stock_model_service.get_active_by_stock_tickers(
             db=db, stock_tickers=stock_tickers
         )
-        closing_prices_map = await self.closing_price_service.get_closing_price_value_by_stock_tickers_and_date_range(
-            db=db,
-            stock_tickers=stock_tickers,
-            target_date=target_date,
-            days_back=days_back,
+        features_list: list[Feature] = (
+            await self.feature_service.get_by_stock_tickers_and_date_range(
+                db=db,
+                stock_tickers=stock_tickers,
+                target_date=target_date,
+                days_back=days_back,
+            )
         )
+        features_map = {
+            feature.stock_ticker: {
+                "close": feature.close,
+                "volumes": feature.volumes,
+            }
+            for feature in features_list
+        }
 
         inference_data = [
             StockToPredictRequestSchema(
                 stock_ticker=model.stock_ticker,
-                closing_prices=closing_prices_map.get(model.stock_ticker)[:days_back],
+                close=features_map.get(model.stock_ticker).get("close")[:days_back],
+                volumes=features_map.get(model.stock_ticker).get("volume")[:days_back],
                 model_id=model.id,
                 model_path=model.model_path,
                 scaler_path=model.scaler_path,
@@ -274,8 +285,8 @@ class InferenceService:
                             "target_date": res.target_date,
                             "period": period,
                             "predicted_price": res.predicted_price[period],
-                            "closing_price": meta.closing_prices[-1],
-                            "closing_price_id": None,  #
+                            "closing_price": meta.close[-1],
+                            "feature_id": None,  #
                         }
                     )
 
@@ -287,7 +298,7 @@ def get_inference_service() -> InferenceService:
         stock_service=get_stock_service(),
         stock_model_service=get_stock_model_service(),
         prediction_service=get_prediction_service(),
-        closing_price_service=get_closing_price_service(),
+        feature_service=get_feature_service(),
         dummy_service=get_dummy_service(),
         ml_operations=get_ml_server_operations(),
         discord_operations=get_discord_operations(),

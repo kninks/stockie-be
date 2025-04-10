@@ -23,4 +23,3 @@ def register_all_jobs():
     register_inference_job()
     register_evaluation_job()
     register_cleanup_job()
-    register_cleanup_job()

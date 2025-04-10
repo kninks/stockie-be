@@ -22,7 +22,7 @@ class PredictionRepository:
         "period",
         "predicted_price",
         "closing_price",
-        "closing_price_id",
+        "feature_id",
         "rank",
         "top_prediction_id",
     }
@@ -173,6 +173,7 @@ class PredictionRepository:
             logger.error(f"Failed to create multiple predictions: {e}")
             raise DBError("Failed to create predictions") from e
 
+    # TODO
     @staticmethod
     async def update_rank_and_top_id(
         db: AsyncSession,

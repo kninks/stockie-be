@@ -38,11 +38,11 @@ class Prediction(Base):
     period: Mapped[int] = mapped_column(Integer, nullable=False)
 
     closing_price: Mapped[float] = mapped_column(Float, nullable=True)
-    closing_price_id: Mapped[int] = mapped_column(
+    feature_id: Mapped[int] = mapped_column(
         ForeignKey(
-            "closing_prices.id",
+            "features.id",
             ondelete="CASCADE",
-            name="fk_predictions_closing_price",
+            name="fk_predictions_feature",
         ),
         nullable=True,
     )

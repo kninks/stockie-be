@@ -40,6 +40,7 @@ class ModelMetadataController:
                 accuracy=request.accuracy,
                 model_path=request.model_path,
                 scaler_path=request.scaler_path,
+                features_used=request.features_used,
                 additional_data=request.additional_data,
                 db=db,
             )

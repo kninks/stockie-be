@@ -16,21 +16,21 @@ class CleanupDataController:
         self,
         db: AsyncSession,
         target_date: date,
-        closing_prices_days_back: int,
+        features_days_back: int,
         predictions_days_back: int,
     ) -> None:
         await self.service.clean_data(
             db=db,
             target_date=target_date,
-            closing_prices_days_back=closing_prices_days_back,
+            features_days_back=features_days_back,
             predictions_days_back=predictions_days_back,
         )
         return None
 
-    async def clean_closing_prices_controller(
+    async def clean_features_controller(
         self, db: AsyncSession, target_date: date, days_back: int
     ) -> None:
-        await self.service.clean_closing_prices(
+        await self.service.clean_features(
             db=db, target_date=target_date, days_back=days_back
         )
         return None

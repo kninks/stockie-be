@@ -7,9 +7,9 @@ from app.core.common.exceptions.custom_exceptions import DBError
 from app.core.common.utils.validators import validate_required
 from app.core.enums.industry_code_enum import IndustryCodeEnum
 from app.models import Prediction
-from app.modules.general.services.closing_price_service import (
-    ClosingPriceService,
-    get_closing_price_service,
+from app.modules.general.services.feature_service import (
+    FeatureService,
+    get_feature_service,
 )
 from app.modules.general.services.prediction_service import (
     PredictionService,
@@ -32,13 +32,13 @@ class InternalService:
         stock_service: StockService,
         prediction_service: PredictionService,
         top_prediction_service: TopPredictionService,
-        closing_price_service: ClosingPriceService,
+        feature_service: FeatureService,
     ):
         self.internal_repository = internal_repository
         self.stock_service = stock_service
         self.prediction_service = prediction_service
         self.top_prediction_service = top_prediction_service
-        self.closing_price_service = closing_price_service
+        self.feature_service = feature_service
 
     async def rank_and_save_top_predictions_all(
         self,
@@ -113,36 +113,38 @@ class InternalService:
         return ranked_predictions
 
     # TODO
-    async def pull_closing_prices_all(
-        self, target_date: date, db: AsyncSession
-    ) -> None:
+    async def pull_features_all(self, target_date: date, db: AsyncSession) -> None:
         validate_required(target_date, "target date")
         stock_tickers = await self.stock_service.get_active_ticker_values(db=db)
-        await self.pull_closing_prices(
+        await self.pull_features(
             stock_tickers=stock_tickers, target_date=target_date, db=db
         )
 
     # TODO: scrape closing prices from Yahoo Finance -> validate -> save to DB
-    async def pull_closing_prices(
+    async def pull_features(
         self, stock_tickers: list[str], target_date: date, db: AsyncSession
     ) -> None:
         validate_required(stock_tickers, "stock tickers")
         validate_required(target_date, "target date")
 
         # Assuming we have a function to fetch closing prices from an external API
-        closing_prices = [
+        feature_list = [
             {
                 "ticker": ticker,
                 "target_date": target_date,
-                "closing_price": None,  # Placeholder for the actual closing price
+                "close": None,  # Placeholder for the actual closing price (float)
+                "open": None,  # Placeholder for the actual opening price (float)
+                "high": None,  # Placeholder for the actual high price (float)
+                "low": None,  # Placeholder for the actual low price (float)
+                "volumes": None,  # Placeholder for the actual volume (float)
             }
             for ticker in stock_tickers
         ]
 
         try:
-            await self.closing_price_service.create_multiple(
+            await self.feature_service.create_multiple(
                 db=db,
-                price_data_list=closing_prices,
+                feature_data_list=feature_list,
             )
         except Exception as e:
             logger.error(f"Failed to pull closing prices: {e}")
@@ -155,5 +157,5 @@ def get_internal_service() -> InternalService:
         stock_service=get_stock_service(),
         prediction_service=get_prediction_service(),
         top_prediction_service=get_top_prediction_service(),
-        closing_price_service=get_closing_price_service(),
+        feature_service=get_feature_service(),
     )
