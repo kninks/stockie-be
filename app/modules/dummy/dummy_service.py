@@ -12,16 +12,16 @@ from app.core.common.utils.validators import (
     validate_required,
 )
 from app.core.enums.industry_code_enum import IndustryCodeEnum
-from app.models import Feature, Stock
-from app.modules.general.services.feature_service import (
-    FeatureService,
-    get_feature_service,
-)
+from app.models import Stock, TradingData
 from app.modules.general.services.stock_model_service import (
     StockModelService,
     get_stock_model_service,
 )
 from app.modules.general.services.stock_service import StockService, get_stock_service
+from app.modules.general.services.trading_data_service import (
+    TradingDataService,
+    get_trading_data_service,
+)
 from app.modules.ml_ops.schemas.inference_schema import InferenceResultSchema
 
 
@@ -30,11 +30,11 @@ class DummyService:
         self,
         stock_service: StockService,
         stock_model_service: StockModelService,
-        feature_service: FeatureService,
+        trading_data_service: TradingDataService,
     ):
         self.stock_service = stock_service
         self.stock_model_service = stock_model_service
-        self.feature_service = feature_service
+        self.trading_data_service = trading_data_service
 
     async def insert_stock(
         self,
@@ -67,12 +67,12 @@ class DummyService:
         return created_stock
 
     @staticmethod
-    async def generate_dummy_features(
+    async def generate_dummy_trading_data(
         db: AsyncSession,
         stock_tickers: list[str],
         end_date: date,
         days_back: int,
-    ) -> list[Feature]:
+    ) -> list[TradingData]:
         data_to_insert = []
         for ticker in stock_tickers:
             price = random.uniform(120, 200)
@@ -85,7 +85,7 @@ class DummyService:
                 volumes = random.randint(1000, 10000)
                 price = round(max(price, 80), 2)
                 data_to_insert.append(
-                    Feature(
+                    TradingData(
                         stock_ticker=ticker,
                         target_date=target_date,
                         close=closing_price,
@@ -133,8 +133,8 @@ class DummyService:
         all_models = await self.stock_model_service.get_active_by_stock_tickers(
             db=db, stock_tickers=stock_tickers
         )
-        all_features_all_stocks = (
-            await self.feature_service.get_by_stock_tickers_and_date_range(
+        all_trading_data_all_stocks = (
+            await self.trading_data_service.get_by_stock_tickers_and_date_range(
                 stock_tickers=stock_tickers,
                 target_date=target_date,
                 days_back=days_back,
@@ -142,19 +142,21 @@ class DummyService:
             )
         )
 
-        features_lookup = defaultdict(list[Feature])
-        for feature in all_features_all_stocks:
-            features_lookup[feature.stock_ticker].append(feature)
+        trading_data_lookup = defaultdict(list[TradingData])
+        for trading_data in all_trading_data_all_stocks:
+            trading_data_lookup[trading_data.stock_ticker].append(trading_data)
 
         inference_results = []
         for model in all_models:
             ticker = model.stock_ticker
-            feature_item_list: list[Feature] = features_lookup.get(ticker)
+            trading_data_item_list: list[TradingData] = trading_data_lookup.get(ticker)
 
-            target_date_yesterday_feature_item = feature_item_list[-2]
-            yesterday_actual_closing_price = target_date_yesterday_feature_item.close
+            target_date_yesterday_trading_data_item = trading_data_item_list[-2]
+            yesterday_actual_closing_price = (
+                target_date_yesterday_trading_data_item.close
+            )
 
-            # feature_id = target_date_yesterday_feature_item.id
+            # trading_data_id = target_date_yesterday_trading_data_item.id
             predicted_prices = [
                 yesterday_actual_closing_price + random.uniform(-5, 5)
                 for i in range(days_forward + 1)
@@ -165,12 +167,12 @@ class DummyService:
             #     "target date",
             #     target_date,
             #     ": id",
-            #     feature_id,
+            #     trading_data_id,
             #     "=",
             #     yesterday_actual_closing_price,
             # )
-            # print("feature_item_list")
-            # print([a.close for a in feature_item_list[:days_back]])
+            # print("trading_data_item_list")
+            # print([a.close for a in trading_data_item_list[:days_back]])
             # print("predicted_prices")
             # print(predicted_prices)
 
@@ -190,5 +192,5 @@ def get_dummy_service() -> DummyService:
     return DummyService(
         stock_service=get_stock_service(),
         stock_model_service=get_stock_model_service(),
-        feature_service=get_feature_service(),
+        trading_data_service=get_trading_data_service(),
     )

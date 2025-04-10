@@ -28,8 +28,8 @@ async def job_cleanup_old_data():
             )
             return
         target_date = date.today()
-        closing_prices_days_back = await job_config_service.get_job_config(
-            db, JobConfigEnum.CLEANUP_FEATURES_DAYS_BACK
+        trading_data_days_back = await job_config_service.get_job_config(
+            db, JobConfigEnum.CLEANUP_TRADING_DATA_DAYS_BACK
         )
         predictions_days_back = await job_config_service.get_job_config(
             db, JobConfigEnum.CLEANUP_PREDICTIONS_DAYS_BACK
@@ -45,7 +45,7 @@ async def job_cleanup_old_data():
 
             await cleanup_service.clean_data(
                 target_date=target_date,
-                features_days_back=closing_prices_days_back,
+                trading_data_days_back=trading_data_days_back,
                 predictions_days_back=predictions_days_back,
                 db=db,
             )

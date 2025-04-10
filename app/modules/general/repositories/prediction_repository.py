@@ -21,7 +21,7 @@ class PredictionRepository:
         "period",
         "predicted_price",
         "closing_price",
-        "feature_id",
+        "trading_data_id",
         "rank",
         "top_prediction_id",
     }

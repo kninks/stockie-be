@@ -31,14 +31,14 @@ class DummyController:
         serialized_data = jsonable_encoder(response)
         return serialized_data
 
-    async def generate_dummy_features_controller(
+    async def generate_dummy_trading_data_controller(
         self,
         db: AsyncSession,
         stock_tickers: list[str],
         end_date: date,
         days_back: int,
     ):
-        response = await self.dummy_service.generate_dummy_features(
+        response = await self.dummy_service.generate_dummy_trading_data(
             db=db,
             stock_tickers=stock_tickers,
             end_date=end_date,

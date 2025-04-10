@@ -2,10 +2,6 @@ from datetime import date
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.general.services.feature_service import (
-    FeatureService,
-    get_feature_service,
-)
 from app.modules.general.services.prediction_service import (
     PredictionService,
     get_prediction_service,
@@ -14,16 +10,20 @@ from app.modules.general.services.top_prediction_service import (
     TopPredictionService,
     get_top_prediction_service,
 )
+from app.modules.general.services.trading_data_service import (
+    TradingDataService,
+    get_trading_data_service,
+)
 
 
 class CleanupDataService:
     def __init__(
         self,
-        feature_service: FeatureService,
+        trading_data_service: TradingDataService,
         prediction_service: PredictionService,
         top_prediction_service: TopPredictionService,
     ):
-        self.feature_service = feature_service
+        self.trading_data_service = trading_data_service
         self.prediction_service = prediction_service
         self.top_prediction_service = top_prediction_service
 
@@ -31,11 +31,11 @@ class CleanupDataService:
         self,
         db: AsyncSession,
         target_date: date,
-        features_days_back: int,
+        trading_data_days_back: int,
         predictions_days_back: int,
     ) -> None:
-        await self.clean_features(
-            db=db, target_date=target_date, days_back=features_days_back
+        await self.clean_trading_data(
+            db=db, target_date=target_date, days_back=trading_data_days_back
         )
         await self.clean_predictions(
             db=db, target_date=target_date, days_back=predictions_days_back
@@ -45,7 +45,7 @@ class CleanupDataService:
         )
 
     # TODO
-    async def clean_features(
+    async def clean_trading_data(
         self, db: AsyncSession, target_date: date, days_back: int
     ) -> None:
         pass
@@ -65,7 +65,7 @@ class CleanupDataService:
 
 def get_cleanup_data_service() -> CleanupDataService:
     return CleanupDataService(
-        feature_service=get_feature_service(),
+        trading_data_service=get_trading_data_service(),
         prediction_service=get_prediction_service(),
         top_prediction_service=get_top_prediction_service(),
     )

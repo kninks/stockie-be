@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from app.core.enums.features_enum import FeatureEnum
+from app.core.enums.trading_data_enum import TradingDataEnum
 
 
 class ModelMetadataResponseSchema(BaseModel):
@@ -12,7 +12,7 @@ class ModelMetadataResponseSchema(BaseModel):
     accuracy: float
     model_path: str
     scaler_path: str
-    features_used: list[FeatureEnum]
+    features_used: list[TradingDataEnum]
     additional_data: Optional[dict] = None
 
 
@@ -22,5 +22,5 @@ class SaveModelMetadataRequestSchema(BaseModel):
     accuracy: float
     model_path: str
     scaler_path: str
-    features_used: list[FeatureEnum]
+    features_used: list[TradingDataEnum]
     additional_data: Optional[dict] = None

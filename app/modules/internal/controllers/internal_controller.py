@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.internal.schemas.internal_schema import (
-    PullFeaturesRequestSchema,
+    PullTradingDataRequestSchema,
     RankPredictionsRequestSchema,
 )
 from app.modules.internal.services.internal_service import (
@@ -25,10 +25,10 @@ class InternalController:
         )
         return response
 
-    async def pull_features_controller(
-        self, request: PullFeaturesRequestSchema, db: AsyncSession
+    async def pull_trading_data_controller(
+        self, request: PullTradingDataRequestSchema, db: AsyncSession
     ) -> None:
-        response = await self.service.pull_features(
+        response = await self.service.pull_trading_data(
             stock_tickers=request.stock_tickers, target_date=request.target_date, db=db
         )
         return response

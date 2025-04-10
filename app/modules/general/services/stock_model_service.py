@@ -13,7 +13,8 @@ from app.core.common.utils.validators import (
     validate_exact_length,
     validate_required,
 )
-from app.core.enums.features_enum import validate_features
+
+# from app.core.enums.features_enum import validate_features
 from app.core.enums.industry_code_enum import IndustryCodeEnum
 from app.models import StockModel
 from app.modules.general.repositories.stock_model_repository import StockModelRepository
@@ -180,11 +181,11 @@ class StockModelService:
             model_data["stock_ticker"] = normalize_stock_ticker(
                 model_data["stock_ticker"]
             )
-            features_used = validate_features(model_data.get("features_used", []))
-            if features_used:
-                model_data["features_used"] = [
-                    feature.value for feature in features_used
-                ]
+            # features_used = validate_features(model_data.get("features_used", []))
+            # if features_used:
+            #     model_data["features_used"] = [
+            #         feature.value for feature in features_used
+            #     ]
 
             return await self.stock_model_repo.create_one(db=db, model_data=model_data)
         except DBError:
