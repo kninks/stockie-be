@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Awaitable, Callable, List
+from typing import Any, Awaitable, Callable
 
 from app.core.clients.ml_server_client import MLServerClient
 from app.core.common.exceptions.custom_exceptions import MLServerError
@@ -25,7 +25,7 @@ class MLServerOperations:
             logger.error(f"{error_message}: {str(e)}")
             raise MLServerError(f"{error_message}: {str(e)}")
 
-    async def run_inference(self, stocks: List[StockToPredictRequestSchema]) -> Any:
+    async def run_inference(self, stocks: list[StockToPredictRequestSchema]) -> Any:
         payload = {"stocks": stocks}
         return await self._make_request(
             self.client.post,

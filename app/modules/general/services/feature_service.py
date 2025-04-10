@@ -72,20 +72,18 @@ class FeatureService:
 
         try:
             if len(stock_tickers) == 1:
-                features = await self.feature_repo.fetch_by_stock_ticker_and_date_range(
+                feature = await self.feature_repo.fetch_by_stock_ticker_and_date_range(
                     db=db,
                     stock_ticker=stock_tickers[0],
                     target_date=target_date,
                     days_back=days_back,
                 )
             else:
-                features = (
-                    await self.feature_repo.fetch_by_stock_tickers_and_date_range(
-                        db=db,
-                        stock_tickers=stock_tickers,
-                        target_date=target_date,
-                        days_back=days_back,
-                    )
+                feature = await self.feature_repo.fetch_by_stock_tickers_and_date_range(
+                    db=db,
+                    stock_tickers=stock_tickers,
+                    target_date=target_date,
+                    days_back=days_back,
                 )
         except Exception as e:
             logger.error(
@@ -94,11 +92,11 @@ class FeatureService:
             )
             raise DBError("Failed to fetch features") from e
 
-        validate_entity_exists(features, "Features")
+        validate_entity_exists(feature, "Features")
         expected_total = len(stock_tickers) * (days_back + 1)
-        validate_exact_length(features, expected_total, "features")
+        validate_exact_length(feature, expected_total, "features")
 
-        return features
+        return feature
 
     async def get_closing_price_value_by_stock_ticker_and_date_range(
         self,
@@ -130,6 +128,7 @@ class FeatureService:
         validate_exact_length(prices, days_back, "features")
         return prices
 
+    # FIXME: recheck
     async def get_closing_price_values_by_stock_tickers_and_date_range(
         self,
         db: AsyncSession,
@@ -178,14 +177,16 @@ class FeatureService:
 
         return dict(grouped)
 
-    async def create_one(self, db: AsyncSession, price_data: dict) -> Feature:
-        validate_required(price_data, "features data")
+    async def create_one(self, db: AsyncSession, trading_data: dict) -> Feature:
+        validate_required(trading_data, "features data")
 
         try:
-            price_data["stock_ticker"] = normalize_stock_ticker(
-                price_data["stock_ticker"]
+            trading_data["stock_ticker"] = normalize_stock_ticker(
+                trading_data["stock_ticker"]
             )
-            price = await self.feature_repo.create_one(db=db, feature_data=price_data)
+            trading = await self.feature_repo.create_one(
+                db=db, feature_data=trading_data
+            )
         except DBError:
             raise
         except Exception as e:
@@ -193,9 +194,9 @@ class FeatureService:
             raise DBError("Unexpected error while creating features") from e
 
         logger.info(
-            f"Inserted feature for {price.stock_ticker} on {price.target_date}."
+            f"Inserted feature for {trading.stock_ticker} on {trading.target_date}."
         )
-        return price
+        return trading
 
     async def create_multiple(
         self, db: AsyncSession, feature_data_list: list[dict]
@@ -203,7 +204,7 @@ class FeatureService:
         validate_required(feature_data_list, "feature data list")
         try:
             feature_data_list = normalize_stock_tickers_in_data(feature_data_list)
-            prices = await self.feature_repo.create_multiple(
+            features = await self.feature_repo.create_multiple(
                 db=db, feature_data_list=feature_data_list
             )
         except DBError:
@@ -213,7 +214,7 @@ class FeatureService:
             raise DBError("Unexpected error while creating features") from e
 
         logger.info(f"Inserted {len(feature_data_list)} features.")
-        return prices
+        return features
 
     async def delete_older_than(
         self,

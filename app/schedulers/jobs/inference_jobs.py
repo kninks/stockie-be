@@ -53,6 +53,7 @@ async def job_run_and_save_inference():
         target_date = date.today() + timedelta(days=1)
         days_back = configs[JobConfigEnum.RUN_INFERENCE_DAYS_BACK]
         days_forward = configs[JobConfigEnum.RUN_INFERENCE_DAYS_FORWARD]
+        save_inference_periods = configs[JobConfigEnum.SAVE_INFERENCE_PERIODS]
 
         await discord.notify_discord_job_status(
             status=JobStatusEnum.STARTED,
@@ -68,6 +69,7 @@ async def job_run_and_save_inference():
                 target_date=target_date,
                 days_back=days_back,
                 days_forward=days_forward,
+                periods=save_inference_periods,
             )
 
             await job_config_service.set_job_config(
@@ -126,14 +128,15 @@ async def job_rank_predictions():
             return
 
         target_date = date.today() + timedelta(days=1)
-        period = configs[JobConfigEnum.SAVE_INFERENCE_PERIODS]
+        periods = configs[JobConfigEnum.SAVE_INFERENCE_PERIODS]
 
         try:
-            await internal_service.rank_and_save_top_predictions_all(
-                db=db,
-                target_date=target_date,
-                period=period,
-            )
+            for period in periods:
+                await internal_service.rank_and_save_top_predictions_all(
+                    db=db,
+                    target_date=target_date,
+                    period=period,
+                )
 
             await job_config_service.set_job_config(
                 db=db,

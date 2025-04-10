@@ -1,5 +1,3 @@
-# app/core/utils/validators.py
-
 import logging
 from typing import Any, Dict, List, Set
 

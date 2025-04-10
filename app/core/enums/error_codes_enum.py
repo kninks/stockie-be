@@ -35,7 +35,7 @@ class ErrorCodes(Enum):
 
     # 🔹 10xx - Generic Application Errors
     GENERIC_ERROR = 1000  # General error for unexpected issues
-    DATABASE_ERROR = 1001  # Database connection issue (e.g., can't reach DB)
+    DATABASE_CONNECTION_ERROR = 1001  # Database connection issue (e.g., can't reach DB)
     QUERY_ERROR = 1002  # SQLAlchemy or query-related issues
     CACHE_ERROR = 1003  # Issues with cache layer (e.g., Redis failure)
 
@@ -56,6 +56,8 @@ class ErrorCodes(Enum):
 
     # ⏳ 15xx - Background Jobs / Async Processing Issues
     BACKGROUND_JOB_FAILED = 1500  # Celery or async job failed
+
+    DATABASE_ERROR = 1700
 
     def __str__(self):
         """Returns the integer value of the Enum."""

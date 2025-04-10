@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 from datetime import date
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +11,7 @@ from app.core.clients.ml_server_operations import (
 )
 from app.core.common.exceptions.custom_exceptions import MLServerError
 from app.core.common.utils.validators import validate_required
+from app.core.enums.features_enum import FeatureEnum
 from app.core.enums.job_enum import JobTypeEnum
 from app.models import Feature, Prediction
 from app.modules.dummy.dummy_service import DummyService, get_dummy_service
@@ -60,14 +62,15 @@ class InferenceService:
         target_date: date,
         days_back: int,
         days_forward: int,
+        periods: list[int],
     ) -> list[Prediction] | None:
-        all_stocks = await self.stock_service.get_active(db=db)
-        stock_tickers = [stock.ticker for stock in all_stocks]
+        stock_tickers = await self.stock_service.get_active_ticker_values(db=db)
         saved_predictions = await self.run_and_save_inference_by_stock_tickers(
             stock_tickers=stock_tickers,
             target_date=target_date,
             days_back=days_back,
             days_forward=days_forward,
+            periods=periods,
             db=db,
         )
         return saved_predictions
@@ -75,6 +78,7 @@ class InferenceService:
     # FIXME:
     #  add error handling
     #  improve performance
+    #  connect w/ ML server
     #  notify on failed stocks : Done
     async def run_and_save_inference_by_stock_tickers(
         self,
@@ -83,6 +87,7 @@ class InferenceService:
         target_date: date,
         days_back: int,
         days_forward: int,
+        periods: list[int],
     ) -> list[Prediction] | None:
         """
         Run inference with only the stock tickers as the input and save the results to the database.
@@ -99,8 +104,6 @@ class InferenceService:
                 db=db,
             )
         )
-        pass
-
         # inference_results: list[InferenceResultSchema] = (
         #     await self._make_run_inference_request_to_ml_server(
         #     await self._make_run_inference_request_to_ml_server(
@@ -108,36 +111,39 @@ class InferenceService:
         #     )
         # )
 
-        # inference_results: list[InferenceResultSchema] = (
-        #     await self.dummy_service.generate_dummy_inference_results(
-        #         db=db,
-        #         stock_tickers=stock_tickers,
-        #         target_date=target_date,
-        #         days_back=days_back,
-        #         days_forward=days_forward,
-        #     )
-        # )
-        #
-        # success_results = [i for i in inference_results if i.success]
-        # failed_results = [i for i in inference_results if not i.success]
-        # if failed_results:
-        #     failed_tickers = [res.stock_ticker for res in failed_results]
-        #     await self.discord.send_discord_message(
-        #         message=f"ML inference failed for: {failed_tickers}",
-        #         job_name=JobTypeEnum.INFERENCE.value,
-        #         is_critical=True,
-        #         mention_everyone=True,
-        #     )
-        #     logger.error(f"ML inference failed for: {failed_tickers}")
-        #     raise MLServerError(f"ML inference failed for: {failed_tickers}")
-        #
-        # saved_predictions = await self._save_success_inference_results(
-        #     inference_data=inference_data,
-        #     success_results=success_results,
-        #     db=db,
-        # )
-        #
-        # return saved_predictions
+        inference_results: list[InferenceResultSchema] = (
+            await self.dummy_service.generate_dummy_inference_results(
+                db=db,
+                stock_tickers=stock_tickers,
+                target_date=target_date,
+                days_back=days_back,
+                days_forward=days_forward,
+            )
+        )
+
+        success_results = [i for i in inference_results if i.success]
+        failed_results = [i for i in inference_results if not i.success]
+        if failed_results:
+            failed_tickers = [res.stock_ticker for res in failed_results]
+            await self.discord.send_discord_message(
+                message=f"ML inference failed for: {failed_tickers}",
+                job_name=JobTypeEnum.INFERENCE.value,
+                is_critical=True,
+                mention_everyone=True,
+            )
+            logger.error(f"ML inference failed for: {failed_tickers}")
+            raise MLServerError(f"ML inference failed for: {failed_tickers}")
+
+        saved_predictions: list[Prediction] = (
+            await self._save_success_inference_results(
+                inference_data=inference_data,
+                success_results=success_results,
+                periods=periods,
+                db=db,
+            )
+        )
+
+        return saved_predictions
 
     # FIXME: Add error handling
     async def run_inference_by_stock_tickers(
@@ -207,6 +213,7 @@ class InferenceService:
         active_models = await self.stock_model_service.get_active_by_stock_tickers(
             db=db, stock_tickers=stock_tickers
         )
+
         features_list: list[Feature] = (
             await self.feature_service.get_by_stock_tickers_and_date_range(
                 db=db,
@@ -215,19 +222,36 @@ class InferenceService:
                 days_back=days_back,
             )
         )
-        features_map = {
-            feature.stock_ticker: {
-                "close": feature.close,
-                "volumes": feature.volumes,
-            }
-            for feature in features_list
-        }
+        features_map = defaultdict(
+            lambda: {"feature_id": [], FeatureEnum.CLOSE: [], FeatureEnum.VOLUMES: []}
+        )
+        for feature in features_list:
+            # id of the day before the target date
+            # closing prices and volumes up until the target date (includes the target date)
+            features_map[feature.stock_ticker]["feature_id"].append(feature.id)
+            features_map[feature.stock_ticker][FeatureEnum.CLOSE].append(feature.close)
+            features_map[feature.stock_ticker][FeatureEnum.VOLUMES].append(
+                feature.volumes
+            )
 
         inference_data = [
             StockToPredictRequestSchema(
                 stock_ticker=model.stock_ticker,
-                close=features_map.get(model.stock_ticker).get("close")[:days_back],
-                volumes=features_map.get(model.stock_ticker).get("volume")[:days_back],
+                feature_id=(
+                    features_map[model.stock_ticker]["feature_id"][-2]
+                    if len(features_map[model.stock_ticker]["feature_id"]) > 1
+                    else None
+                ),
+                close=(
+                    features_map[model.stock_ticker][FeatureEnum.CLOSE][:days_back]
+                    if FeatureEnum.CLOSE in model.features_used
+                    else []
+                ),
+                volumes=(
+                    features_map[model.stock_ticker][FeatureEnum.VOLUMES][:days_back]
+                    if FeatureEnum.VOLUMES in model.features_used
+                    else []
+                ),
                 model_id=model.id,
                 model_path=model.model_path,
                 scaler_path=model.scaler_path,
@@ -254,20 +278,26 @@ class InferenceService:
         db: AsyncSession,
         inference_data: list[StockToPredictRequestSchema],
         success_results: list[InferenceResultSchema],
-    ) -> list[Prediction]:
-        predictions = self._prepare_prediction_rows(inference_data, success_results)
+        periods: list[int],
+    ) -> list[Prediction] | None:
+        predictions = self._prepare_prediction_rows(
+            inference_data=inference_data,
+            success_results=success_results,
+            periods=periods,
+        )
         saved_predictions = await self.prediction_service.create_by_list(
             db=db, prediction_data_list=predictions
         )
         return saved_predictions
 
-    # DONE: closing price id (already nullable in the schema)
+    # DONE
     @staticmethod
     def _prepare_prediction_rows(
         inference_data: list[StockToPredictRequestSchema],
         success_results: list[InferenceResultSchema],
+        periods: list[int],
     ) -> list[dict]:
-        periods = [1, 5, 10, 15]
+        # periods = [1, 5, 10, 15]
         predictions = []
         meta_lookup = {item.stock_ticker: item for item in inference_data}
 
@@ -277,16 +307,16 @@ class InferenceService:
                 continue
 
             for period in periods:
-                if period < len(res.predicted_price):  # ← same as your original logic
+                if period < len(res.predicted_price):
                     predictions.append(
                         {
                             "stock_ticker": res.stock_ticker,
-                            "model_id": res.model_id,
+                            "model_id": meta.model_id,
                             "target_date": res.target_date,
                             "period": period,
                             "predicted_price": res.predicted_price[period],
                             "closing_price": meta.close[-1],
-                            "feature_id": None,  #
+                            "feature_id": meta.feature_id,
                         }
                     )
 

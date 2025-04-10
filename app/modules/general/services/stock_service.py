@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -79,8 +79,8 @@ class StockService:
         return stock
 
     async def get_by_tickers(
-        self, db: AsyncSession, stock_tickers: List[str]
-    ) -> List[Stock]:
+        self, db: AsyncSession, stock_tickers: list[str]
+    ) -> list[Stock]:
         validate_required(stock_tickers, "stock tickers")
         stock_tickers = normalize_stock_tickers(stock_tickers)
 
@@ -107,7 +107,7 @@ class StockService:
         db: AsyncSession,
         industry_code: IndustryCodeEnum,
         is_active: Optional[bool] = True,
-    ) -> List[Stock]:
+    ) -> list[Stock]:
         validate_required(industry_code, "industry code")
         validate_enum_input(industry_code, IndustryCodeEnum, "industry code")
 
@@ -127,9 +127,9 @@ class StockService:
     async def get_by_industry_codes(
         self,
         db: AsyncSession,
-        industry_codes: List[IndustryCodeEnum],
+        industry_codes: list[IndustryCodeEnum],
         is_active: Optional[bool] = True,
-    ) -> List[Stock]:
+    ) -> list[Stock]:
         validate_required(industry_codes, "industry codes")
         validate_enum_input(industry_codes, IndustryCodeEnum, "industry codes")
 
@@ -152,6 +152,34 @@ class StockService:
                 stocks, 5 * len(industry_codes), "stocks by industry codes"
             )
         return stocks
+
+    async def create_stock(
+        self,
+        db: AsyncSession,
+        stock_ticker: str,
+        industry_code: IndustryCodeEnum,
+        stock_name: str,
+        stock_description: Optional[str] = None,
+    ) -> Stock:
+        validate_required(stock_ticker, "stock ticker")
+        validate_required(industry_code, "industry code")
+        validate_required(stock_name, "stock name")
+        normalized_stock_ticker = normalize_stock_ticker(stock_ticker)
+
+        try:
+            stock = await self.stock_repo.create_stock(
+                db=db,
+                stock_ticker=normalized_stock_ticker,
+                industry_code=industry_code,
+                stock_name=stock_name,
+                stock_description=stock_description,
+            )
+        except Exception as e:
+            logger.error(f"Failed to create stock '{stock_ticker}': {e}")
+            raise DBError("Failed to create stock") from e
+
+        validate_entity_exists(stock, f"Stock '{stock_ticker}'")
+        return stock
 
 
 def get_stock_service() -> StockService:

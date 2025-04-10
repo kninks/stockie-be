@@ -20,13 +20,13 @@ async def clean_data_route(
     db: AsyncSession = Depends(get_db),
     controller: CleanupDataController = Depends(get_cleanup_data_controller),
     target_date: date = Query(...),
-    closing_prices_days_back: int = Query(),
+    features_days_back: int = Query(),
     predictions_days_back: int = Query(),
 ):
     await controller.clean_data_controller(
         db=db,
         target_date=target_date,
-        features_days_back=closing_prices_days_back,
+        features_days_back=features_days_back,
         predictions_days_back=predictions_days_back,
     )
     return success_response()

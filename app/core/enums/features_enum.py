@@ -6,7 +6,7 @@ class FeatureEnum(str, Enum):
     OPEN = "open"
     HIGH = "high"
     LOW = "low"
-    VOLUME = "volumes"
+    VOLUMES = "volumes"
 
 
 def validate_features(features: list[str]) -> list[FeatureEnum]:

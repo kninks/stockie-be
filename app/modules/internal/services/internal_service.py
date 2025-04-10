@@ -79,10 +79,7 @@ class InternalService:
         )
 
         ranked_predictions = self.rank_predictions(predictions)
-        print(f"Ranked predictions: {ranked_predictions}")
-        logger.info(f"Ranked predictions: {ranked_predictions}")
 
-        # Save the ranked predictions to the database
         try:
             await self.internal_repository.create_top_prediction_and_update_ranks(
                 db=db,
@@ -107,7 +104,6 @@ class InternalService:
                 "prediction_id": p.id,
                 "rank": i + 1,
             }
-            # RankedPrediction(prediction=p, rank=i + 1)
             for i, p in enumerate(predictions[:5])
         ]
         return ranked_predictions

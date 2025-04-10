@@ -3,7 +3,7 @@ from datetime import date, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.common.exceptions.custom_exceptions import DBError, ResourceNotFoundError
+from app.core.common.exceptions.custom_exceptions import DBError
 from app.core.common.utils.validators import (
     normalize_stock_ticker,
     normalize_stock_tickers,
@@ -229,11 +229,9 @@ class PredictionService:
     ) -> list[Prediction]:
         validate_required(prediction_data_list, "prediction data")
         prediction_data_list = normalize_stock_tickers_in_data(prediction_data_list)
-        logger.warning(f"prediction_data_list: {prediction_data_list}")
 
         try:
             prediction_data_list = normalize_stock_tickers_in_data(prediction_data_list)
-            print(prediction_data_list)
             if len(prediction_data_list) == 1:
                 prediction = await self.prediction_repo.create_one(
                     db=db, prediction_data=prediction_data_list[0], refresh=refresh
@@ -252,65 +250,6 @@ class PredictionService:
         validate_entity_exists(predictions, "Predictions")
         validate_exact_length(predictions, len(prediction_data_list), "predictions")
         return predictions
-
-    async def update_rank_and_top_id(
-        self,
-        db: AsyncSession,
-        prediction_id: int,
-        rank: int | None,
-        top_prediction_id: int | None,
-    ) -> None:
-        validate_required(prediction_id, "prediction ID")
-
-        try:
-            updated_count = await self.prediction_repo.update_rank_and_top_id(
-                db=db,
-                prediction_id=prediction_id,
-                rank=rank,
-                top_prediction_id=top_prediction_id,
-            )
-        except Exception as e:
-            logger.error(f"Failed to update prediction ID {prediction_id}: {e}")
-            raise DBError("Failed to update prediction") from e
-
-        if updated_count == 0:
-            logger.warning(f"No prediction updated for ID {prediction_id}")
-            raise ResourceNotFoundError(f"Prediction {prediction_id} not found")
-
-    async def update_batch_rank_and_top_prediction(
-        self, db: AsyncSession, updates: list[dict]
-    ) -> int:
-        """
-        updates with a list of {id, rank, top_prediction_id}
-        """
-        validate_required(updates, "prediction updates")
-        for item in updates:
-            validate_required(item.get("id"), "prediction ID")
-
-        try:
-            if len(updates) == 1:
-                prediction = await self.prediction_repo.update_rank_and_top_id(
-                    db=db,
-                    prediction_id=updates[0]["id"],
-                    rank=updates[0]["rank"],
-                    top_prediction_id=updates[0]["top_prediction_id"],
-                )
-                updated_count = 1 if prediction else 0
-            else:
-                updated_count = (
-                    await self.prediction_repo.update_batch_rank_and_top_prediction(
-                        db=db,
-                        updates=updates,
-                    )
-                )
-        except Exception as e:
-            logger.error(
-                f"Failed to update prediction ranks and top prediction links: {e}"
-            )
-            raise DBError("Failed to update predictions") from e
-
-        logger.info(f"Updated {updated_count} predictions.")
-        return updated_count
 
     async def delete_older_than(
         self,

@@ -1,9 +1,8 @@
 import logging
 from datetime import date
-from typing import List, Set
+from typing import Set
 
-from sqlalchemy import bindparam, delete, select, text, update
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import delete, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -36,15 +35,15 @@ class PredictionRepository:
 
     @staticmethod
     async def fetch_by_ids(
-        db: AsyncSession, prediction_ids: List[int]
-    ) -> List[Prediction]:
+        db: AsyncSession, prediction_ids: list[int]
+    ) -> list[Prediction]:
         stmt = (
             select(Prediction)
             .where(Prediction.id.in_(prediction_ids))
             .order_by(Prediction.stock_ticker, Prediction.period)
         )
         result = await db.execute(stmt)
-        predictions: List[Prediction] = list(result.scalars().all())
+        predictions: list[Prediction] = list(result.scalars().all())
         return predictions
 
     @staticmethod
@@ -72,8 +71,8 @@ class PredictionRepository:
         db: AsyncSession,
         target_date: date,
         period: int,
-        stock_tickers: List[str],
-    ) -> List[Prediction]:
+        stock_tickers: list[str],
+    ) -> list[Prediction]:
         stmt = (
             select(Prediction)
             .where(
@@ -84,7 +83,7 @@ class PredictionRepository:
             .order_by(Prediction.stock_ticker, Prediction.period)
         )
         result = await db.execute(stmt)
-        predictions: List[Prediction] = list(result.scalars().all())
+        predictions: list[Prediction] = list(result.scalars().all())
         return predictions
 
     @staticmethod
@@ -93,7 +92,7 @@ class PredictionRepository:
         target_date: date,
         period: int,
         industry_code: str,
-    ) -> List[Prediction]:
+    ) -> list[Prediction]:
         stmt = (
             select(Prediction)
             .join(Stock)
@@ -104,7 +103,7 @@ class PredictionRepository:
             )
         ).order_by(Prediction.stock_ticker, Prediction.period)
         result = await db.execute(stmt)
-        predictions: List[Prediction] = list(result.scalars().all())
+        predictions: list[Prediction] = list(result.scalars().all())
         return predictions
 
     @staticmethod
@@ -112,8 +111,8 @@ class PredictionRepository:
         db: AsyncSession,
         target_date: date,
         period: int,
-        industry_codes: List[str],
-    ) -> List[Prediction]:
+        industry_codes: list[str],
+    ) -> list[Prediction]:
         stmt = (
             select(Prediction)
             .join(Stock)
@@ -125,7 +124,7 @@ class PredictionRepository:
             .order_by(Prediction.stock_ticker, Prediction.period)
         )
         result = await db.execute(stmt)
-        predictions: List[Prediction] = list(result.scalars().all())
+        predictions: list[Prediction] = list(result.scalars().all())
         return predictions
 
     @staticmethod
@@ -153,9 +152,9 @@ class PredictionRepository:
     @staticmethod
     async def create_multiple(
         db: AsyncSession,
-        prediction_data_list: List[dict],
+        prediction_data_list: list[dict],
         refresh: bool = True,
-    ) -> List[Prediction]:
+    ) -> list[Prediction]:
         sanitized_data_list = sanitize_batch(
             prediction_data_list, allowed_fields=PredictionRepository.ALLOWED_FIELDS
         )
@@ -174,85 +173,6 @@ class PredictionRepository:
             raise DBError("Failed to create predictions") from e
 
     # TODO
-    @staticmethod
-    async def update_rank_and_top_id(
-        db: AsyncSession,
-        prediction_id: int,
-        rank: int | None = None,
-        top_prediction_id: int | None = None,
-    ) -> int:
-        try:
-            stmt = (
-                update(Prediction)
-                .where(Prediction.id == prediction_id)
-                .values(rank=rank, top_prediction_id=top_prediction_id)
-                .execution_options(synchronize_session="fetch")
-            )
-            result = await db.execute(stmt)
-            await db.commit()
-            return result.rowcount
-        except SQLAlchemyError as e:
-            await db.rollback()
-            logger.error(f"Failed to update prediction {prediction_id}: {e}")
-            raise DBError(f"Failed to update prediction {prediction_id}") from e
-
-    @staticmethod
-    async def update_batch_rank_and_top_prediction(
-        db: AsyncSession,
-        updates: List[dict],
-    ) -> int:
-        try:
-            sanitized_updates = sanitize_batch(
-                updates, allowed_fields={"id", "rank", "top_prediction_id"}
-            )
-
-            query = text(
-                """
-                UPDATE predictions p SET
-                    rank = u.rank,
-                    top_prediction_id = u.top_prediction_id
-                FROM jsonb_to_recordset(:payload) AS u(
-                    id INTEGER,
-                    rank INTEGER,
-                    top_prediction_id INTEGER
-                )
-                WHERE p.id = u.id
-            """
-            ).bindparams(bindparam("payload", type_=JSONB))
-
-            await db.execute(query, {"payload": sanitized_updates})
-            await db.commit()
-            return len(sanitized_updates)
-
-            # sanitized_updates = sanitize_batch(
-            #     updates, allowed_fields={"id", "rank", "top_prediction_id"}
-            # )
-            #
-            # stmt = (
-            #     update(Prediction)
-            #     .where(Prediction.id == bindparam("b_id"))
-            #     .values(
-            #         rank=bindparam("rank"),
-            #         top_prediction_id=bindparam("top_prediction_id"),
-            #     )
-            #     .execution_options(synchronize_session=False)
-            # )
-            # bound_data = [
-            #     {
-            #         "b_id": item["id"],
-            #         "rank": item.get("rank"),
-            #         "top_prediction_id": item.get("top_prediction_id"),
-            #     }
-            #     for item in sanitized_updates
-            # ]
-            # result = await db.execute(stmt, bound_data)
-            # await db.commit()
-            # return result.rowcount
-        except SQLAlchemyError as e:
-            await db.rollback()
-            logger.error(f"Failed to batch update prediction ranks: {e}")
-            raise DBError("Failed to batch update prediction ranks") from e
-
     @staticmethod
     async def delete_older_than(db: AsyncSession, cutoff_date: date) -> int:
         try:
