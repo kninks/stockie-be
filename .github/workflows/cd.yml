@@ -77,6 +77,7 @@ jobs:
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
+          service: stockie-service
           image: asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-service:${{ needs.build.outputs.image_tag }}
           region: asia-southeast1
           env_vars: |
