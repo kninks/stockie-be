@@ -37,7 +37,7 @@ jobs:
       - name: Build & push Docker image
         id: build
         run: |
-          IMAGE_NAME=gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-backend
+          IMAGE_NAME=asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-backend
           TAG=v1.0.${{ github.run_number }}-${{ github.sha }}
 
           docker build -t $IMAGE_NAME:$TAG .
@@ -72,14 +72,14 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: stockie-backend
-          image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-backend:${{ needs.build.outputs.image_tag }}
+          image: asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-backend:${{ needs.build.outputs.image_tag }}
           region: asia-southeast1
 
       - name: Notify Discord on Success
         if: success()
         run: |
           curl -X POST -H "Content-Type: application/json" \
-          -d '{"content": "✅ Deployment succeeded for stockie-backend!\n\nDeployed Image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-backend:${{ needs.build.outputs.image_tag }}\nCommit: ${{ github.sha }}\nView it at: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"}' \
+          -d '{"content": "✅ Deployment succeeded for stockie-backend!\n\nDeployed Image: asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-backend:${{ needs.build.outputs.image_tag }}\nCommit: ${{ github.sha }}\nView it at: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"}' \
           ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK_URL }}
 
       - name: Notify Discord on Failure
@@ -89,4 +89,4 @@ jobs:
           -d '{"content": "❌ Deployment failed for stockie-backend!\n\nError: ${{ steps.deploy.outputs.error }}\nCommit: ${{ github.sha }}"}' \
           ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK_URL }}
           
-          gcloud run services update stockie-backend --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-backend:<last-successful-image-tag> --region asia-southeast1
+          gcloud run services update stockie-backend --image asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-backend:<last-successful-image-tag> --region asia-southeast1

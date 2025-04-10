@@ -1,5 +1,4 @@
 import logging
-from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -24,7 +23,7 @@ class IndustryService:
     ):
         self.industry_repo = industry_repository
 
-    async def get_all_industry(self, db: AsyncSession) -> List[Industry]:
+    async def get_all_industry(self, db: AsyncSession) -> list[Industry]:
         try:
             industries = await self.industry_repo.fetch_all(db=db)
         except Exception as e:
@@ -53,8 +52,8 @@ class IndustryService:
         return industry
 
     async def get_by_codes(
-        self, db: AsyncSession, industry_codes: List[IndustryCodeEnum]
-    ) -> List[Industry]:
+        self, db: AsyncSession, industry_codes: list[IndustryCodeEnum]
+    ) -> list[Industry]:
         validate_required(industry_codes, "industry codes")
         validate_enum_input(industry_codes, IndustryCodeEnum, "industry codes")
 

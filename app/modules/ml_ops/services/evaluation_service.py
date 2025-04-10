@@ -4,9 +4,9 @@ from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.clients.discord_client import DiscordOperations, get_discord_operations
-from app.modules.general.services.closing_price_service import (
-    ClosingPriceService,
-    get_closing_price_service,
+from app.modules.general.services.feature_service import (
+    FeatureService,
+    get_feature_service,
 )
 from app.modules.general.services.prediction_service import (
     PredictionService,
@@ -22,12 +22,12 @@ class EvaluationService:
         self,
         discord_operations: DiscordOperations,
         stock_service: StockService,
-        closing_price_service: ClosingPriceService,
+        feature_service: FeatureService,
         prediction_service: PredictionService,
     ):
         self.discord = discord_operations
         self.stock_service = stock_service
-        self.closing_price_service = closing_price_service
+        self.feature_service = feature_service
         self.prediction_service = prediction_service
 
     # TODO
@@ -104,6 +104,6 @@ def get_evaluation_service() -> EvaluationService:
     return EvaluationService(
         discord_operations=get_discord_operations(),
         stock_service=get_stock_service(),
-        closing_price_service=get_closing_price_service(),
+        feature_service=get_feature_service(),
         prediction_service=get_prediction_service(),
     )

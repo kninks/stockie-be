@@ -19,6 +19,6 @@ class RankedPrediction:
     rank: int
 
 
-class PullClosingPriceRequestSchema(BaseModel):
+class PullFeaturesRequestSchema(BaseModel):
     stock_tickers: list[str]
     target_date: date

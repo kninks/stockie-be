@@ -29,9 +29,11 @@ class StockModel(Base):
     version: Mapped[str] = mapped_column(String(50), nullable=False)
 
     accuracy: Mapped[float] = mapped_column(Float, nullable=True)
-    model_path: Mapped[str] = mapped_column(Text, nullable=True)
-    scaler_path: Mapped[str] = mapped_column(Text, nullable=True)
+    model_path: Mapped[str] = mapped_column(Text, nullable=False)
+    scaler_path: Mapped[str] = mapped_column(Text, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    features_used: Mapped[list[str]] = mapped_column(JSON, nullable=False)
+
     additional_data: Mapped[dict] = mapped_column(JSON, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(

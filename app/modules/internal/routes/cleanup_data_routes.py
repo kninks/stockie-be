@@ -26,20 +26,20 @@ async def clean_data_route(
     await controller.clean_data_controller(
         db=db,
         target_date=target_date,
-        closing_prices_days_back=closing_prices_days_back,
+        features_days_back=closing_prices_days_back,
         predictions_days_back=predictions_days_back,
     )
     return success_response()
 
 
-@router.delete("/closing-prices")
-async def clean_closing_prices_route(
+@router.delete("/features")
+async def clean_features_route(
     db: AsyncSession = Depends(get_db),
     controller: CleanupDataController = Depends(get_cleanup_data_controller),
     target_date: date = Query(...),
     days_back: int = Query(),
 ):
-    await controller.clean_closing_prices_controller(
+    await controller.clean_features_controller(
         target_date=target_date, days_back=days_back, db=db
     )
     return success_response()

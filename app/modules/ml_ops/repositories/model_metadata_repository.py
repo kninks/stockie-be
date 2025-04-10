@@ -20,6 +20,7 @@ class ModelMetadataRepository:
         accuracy: float,
         model_path: str,
         scaler_path: str,
+        features_used: list[str],
         additional_data: Optional[dict] = None,
     ) -> StockModel:
         try:
@@ -35,6 +36,7 @@ class ModelMetadataRepository:
                 accuracy=accuracy,
                 model_path=model_path,
                 scaler_path=scaler_path,
+                features_used=features_used,
                 additional_data=additional_data,
                 is_active=True,
             )

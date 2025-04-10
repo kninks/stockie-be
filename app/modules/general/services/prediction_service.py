@@ -16,9 +16,9 @@ from app.core.common.utils.validators import (
 from app.core.enums.industry_code_enum import IndustryCodeEnum
 from app.models import Prediction
 from app.modules.general.repositories.prediction_repository import PredictionRepository
-from app.modules.general.services.closing_price_service import (
-    ClosingPriceService,
-    get_closing_price_service,
+from app.modules.general.services.feature_service import (
+    FeatureService,
+    get_feature_service,
 )
 
 logger = logging.getLogger(__name__)
@@ -28,10 +28,10 @@ class PredictionService:
     def __init__(
         self,
         prediction_repository: PredictionRepository,
-        closing_price_service: ClosingPriceService,
+        feature_service: FeatureService,
     ):
         self.prediction_repo = prediction_repository
-        self.closing_price_service = closing_price_service
+        self.feature_service = feature_service
 
     async def get_by_id(self, db: AsyncSession, prediction_id: int) -> Prediction:
         validate_required(prediction_id, "prediction ID")
@@ -338,5 +338,5 @@ class PredictionService:
 def get_prediction_service() -> PredictionService:
     return PredictionService(
         prediction_repository=PredictionRepository(),
-        closing_price_service=get_closing_price_service(),
+        feature_service=get_feature_service(),
     )

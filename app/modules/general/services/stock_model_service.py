@@ -8,12 +8,12 @@ from app.core.common.exceptions.custom_exceptions import DBError
 from app.core.common.utils.validators import (
     normalize_stock_ticker,
     normalize_stock_tickers,
-    normalize_stock_tickers_in_data,
     validate_entity_exists,
     validate_enum_input,
     validate_exact_length,
     validate_required,
 )
+from app.core.enums.features_enum import validate_features
 from app.core.enums.industry_code_enum import IndustryCodeEnum
 from app.models import StockModel
 from app.modules.general.repositories.stock_model_repository import StockModelRepository
@@ -95,8 +95,8 @@ class StockModelService:
         return stock_model
 
     async def get_active_by_stock_tickers(
-        self, db: AsyncSession, stock_tickers: List[str]
-    ) -> List[StockModel]:
+        self, db: AsyncSession, stock_tickers: list[str]
+    ) -> list[StockModel]:
         validate_required(stock_tickers, "stock tickers")
         stock_tickers = normalize_stock_tickers(stock_tickers)
 
@@ -118,6 +118,13 @@ class StockModelService:
 
         validate_entity_exists(stock_models, "Active stock models")
         validate_exact_length(stock_models, len(stock_tickers), "active stock models")
+
+        # for model in stock_models:
+        #     if model.features_used:
+        #         model.features_used = [
+        #             FeatureEnum(feature) for feature in model.features_used
+        #         ]
+
         return stock_models
 
     async def get_active_by_industry_code(
@@ -169,11 +176,16 @@ class StockModelService:
 
     async def create_one(self, db: AsyncSession, model_data: dict) -> StockModel:
         validate_required(model_data, "stock model data")
-
         try:
             model_data["stock_ticker"] = normalize_stock_ticker(
                 model_data["stock_ticker"]
             )
+            features_used = validate_features(model_data.get("features_used", []))
+            if features_used:
+                model_data["features_used"] = [
+                    feature.value for feature in features_used
+                ]
+
             return await self.stock_model_repo.create_one(db=db, model_data=model_data)
         except DBError:
             raise  # Already wrapped
@@ -181,21 +193,21 @@ class StockModelService:
             logger.error(f"Unexpected DB error during create_one: {e}")
             raise DBError("Unexpected error while creating stock model") from e
 
-    async def create_multiple(
-        self, db: AsyncSession, model_data_list: List[dict]
-    ) -> List[StockModel]:
-        validate_required(model_data_list, "stock model data list")
-
-        try:
-            model_data_list = normalize_stock_tickers_in_data(model_data_list)
-            return await self.stock_model_repo.create_multiple(
-                db=db, model_data_list=model_data_list
-            )
-        except DBError:
-            raise
-        except SQLAlchemyError as e:
-            logger.error(f"Unexpected DB error during create_multiple: {e}")
-            raise DBError("Unexpected error while creating stock models") from e
+    # async def create_multiple(
+    #     self, db: AsyncSession, model_data_list: list[dict]
+    # ) -> List[StockModel]:
+    #     validate_required(model_data_list, "stock model data list")
+    #
+    #     try:
+    #         model_data_list = normalize_stock_tickers_in_data(model_data_list)
+    #         return await self.stock_model_repo.create_multiple(
+    #             db=db, model_data_list=model_data_list
+    #         )
+    #     except DBError:
+    #         raise
+    #     except SQLAlchemyError as e:
+    #         logger.error(f"Unexpected DB error during create_multiple: {e}")
+    #         raise DBError("Unexpected error while creating stock models") from e
 
     # TODO
     async def deactivate(

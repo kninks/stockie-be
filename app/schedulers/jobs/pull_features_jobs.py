@@ -14,15 +14,15 @@ discord = get_discord_operations()
 
 
 # run inference daily
-async def job_pull_prices():
+async def job_features():
     async with AsyncSessionLocal() as db:
         circuit_breaker = await job_config_service.get_job_config(
-            db, JobConfigEnum.PULL_PRICES_CIRCUIT_BREAKER
+            db, JobConfigEnum.PULL_FEATURES_CIRCUIT_BREAKER
         )
         if circuit_breaker:
             await discord.notify_discord_job_status(
                 status=JobStatusEnum.SKIPPED,
-                job_type=JobTypeEnum.PULL_PRICES,
+                job_type=JobTypeEnum.PULL_FEATURES,
                 custom_message="Skip reason: circuit breaker flag.",
                 is_critical=False,
                 mention_everyone=False,
@@ -30,27 +30,27 @@ async def job_pull_prices():
             return
         target_date = date.today()
         try:
-            await internal_service.pull_closing_prices_all(
+            await internal_service.pull_features_all(
                 db=db,
                 target_date=target_date,
             )
 
             await job_config_service.set_job_config(
                 db=db,
-                key=JobConfigEnum.LAST_SUCCESS_PULL_PRICES,
+                key=JobConfigEnum.LAST_SUCCESS_PULL_FEATURES,
                 value=str(datetime.now()),
             )
 
             await discord.notify_discord_job_status(
                 status=JobStatusEnum.SUCCESS,
-                job_type=JobTypeEnum.PULL_PRICES,
+                job_type=JobTypeEnum.PULL_FEATURES,
                 is_critical=False,
                 mention_everyone=False,
             )
         except Exception as e:
             await discord.notify_discord_job_status(
                 status=JobStatusEnum.FAILED,
-                job_type=JobTypeEnum.PULL_PRICES,
+                job_type=JobTypeEnum.PULL_FEATURES,
                 custom_message=str(e),
                 is_critical=True,
                 mention_everyone=True,
@@ -98,7 +98,7 @@ def register_evaluation_job():
     pull_hour = 19
     pull_minute = 00
     scheduler.add_job(
-        job_pull_prices,
+        job_features,
         trigger=CronTrigger(hour=pull_hour, minute=pull_minute),
         id="daily_pull_prices_job",
         name="Pull Prices Daily",
