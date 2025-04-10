@@ -34,12 +34,13 @@ jobs:
 #          project_id: ${{ secrets.GCP_PROJECT_ID }}
 #        env:
 #          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_WIF_CONFIG }}
-
+      - name: Configure Docker to use gcloud credentials
+        run: |
+          gcloud auth configure-docker --quiet
 
       - name: Build & push Docker image
         id: build
         run: |
-          REPO_NAME=stockie-service
           IMAGE_NAME=asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-service
           TAG=v1.0.${{ github.run_number }}-${{ github.sha }}
 
