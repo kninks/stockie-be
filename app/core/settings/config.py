@@ -2,9 +2,10 @@ import logging
 import os
 from typing import Optional
 
+from app.core.enums.roles_enum import RoleEnum
+
 # from dotenv import load_dotenv
 
-from app.core.enums.roles_enum import RoleEnum
 
 # if os.getenv("ENVIRONMENT") != "cloud_run":
 #     load_dotenv()

@@ -1,0 +1,121 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+#  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  build:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.build.outputs.image_tag }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up gcloud auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure Docker to use gcloud credentials
+        run: |
+          gcloud auth configure-docker --quiet
+
+      - name: Build & push Docker image
+        id: build
+        run: |
+          IMAGE_NAME=asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-service
+          TAG=v1.0.${{ github.run_number }}-${{ github.sha }}
+
+          docker build -t $IMAGE_NAME:$TAG .
+          docker push $IMAGE_NAME:$TAG
+          
+          echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
+          echo "::set-output name=image_tag::$TAG"
+
+      - name: Create and push Git tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag v1.0.${{ github.run_number }}-${{ github.sha }}
+          git push origin v1.0.${{ github.run_number }}-${{ github.sha }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    environment: prod
+    needs: build
+    if: success()
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up gcloud auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.11.4
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./infra
+
+      - name: Terraform Plan
+        run: |
+          terraform plan -out=tfplan > plan.log
+          cat plan.log
+        working-directory: ./infra
+        env:
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+          TF_VAR_image_tag: ${{ needs.build.outputs.image_tag }}
+          TF_VAR_database_url: ${{ secrets.DATABASE_URL }}
+          TF_VAR_ml_server_url: ${{ secrets.ML_SERVER_URL }}
+          TF_VAR_discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          TF_VAR_redis_host: ${{ secrets.REDIS_HOST }}
+          TF_VAR_redis_port: ${{ secrets.REDIS_PORT }}
+          TF_VAR_backend_api_key: ${{ secrets.BACKEND_API_KEY }}
+          TF_VAR_client_api_key: ${{ secrets.CLIENT_API_KEY }}
+          TF_VAR_ml_server_api_key: ${{ secrets.ML_SERVER_API_KEY }}
+          TF_VAR_debug: ${{ vars.DEBUG }}
+          TF_VAR_log_level: ${{ vars.LOG_LEVEL }}
+          TF_VAR_allowed_origins: ${{ vars.ALLOWED_ORIGINS }}
+
+      - name: Notify Discord with Plan Summary
+        run: |
+          PLAN=$(head -c 1800 ./infra/plan.log | sed 's/"/\\"/g')
+          curl -X POST -H "Content-Type: application/json" \
+          -d "{\"content\": \"🧾 **Terraform Plan Summary:**\n\`\`\`${PLAN}\`\`\`\nCommit: ${{ github.sha }}\"}" \
+          ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK_URL }}
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+        working-directory: ./infra
+
+      - name: Notify Discord on Success
+        if: success()
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+          -d '{"content": "✅ Deployment succeeded for stockie-backend!\n\nDeployed Image: asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-backend:${{ needs.build.outputs.image_tag }}\nCommit: ${{ github.sha }}\nView it at: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"}' \
+          ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK_URL }}
+
+      - name: Notify Discord on Failure
+        if: failure()
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+          -d '{"content": "❌ Deployment failed for stockie-backend!\n\nError: ${{ steps.deploy.outputs.error }}\nCommit: ${{ github.sha }}"}' \
+          ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK_URL }}
+          
+          gcloud run services update stockie-backend --image asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-backend:<last-successful-image-tag> --region asia-southeast1

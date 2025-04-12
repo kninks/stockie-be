@@ -1,4 +1,5 @@
 import logging
+
 # from contextlib import asynccontextmanager
 from typing import cast
 
@@ -25,6 +26,7 @@ from app.modules.dummy import dummy_routes
 from app.modules.internal.routes import internal_routes
 from app.modules.ml_ops.routes import ml_ops_routes
 from app.modules.public.routes import public_routes
+
 # from app.schedulers.scheduler import register_all_jobs, start_scheduler
 
 setup_logging()
@@ -55,7 +57,6 @@ app = FastAPI(
 
 app.add_middleware(logging_middleware_factory())
 # app.add_middleware(role_auth_middleware_factory())
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=config.ALLOWED_ORIGINS,

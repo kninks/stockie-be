@@ -32,7 +32,6 @@ jobs:
       REDIS_PORT: ${{ secrets.REDIS_PORT }}
       REDIS_DB: ${{ secrets.REDIS_DB }}
 
-#      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}/
       CLIENT_API_KEY: ${{ secrets.CLIENT_API_KEY }}
       BACKEND_API_KEY: ${{ secrets.BACKEND_API_KEY }}
       ML_SERVER_API_KEY: ${{ secrets.ML_SERVER_API_KEY }}
