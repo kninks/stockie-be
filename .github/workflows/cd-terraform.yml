@@ -81,6 +81,7 @@ jobs:
         env:
           TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
           TF_VAR_image_tag: ${{ needs.build.outputs.image_tag }}
+          TF_VAR_service_account_email: ${{ secrets.GCP_SA_EMAIL }}
           TF_VAR_database_url: ${{ secrets.DATABASE_URL }}
           TF_VAR_ml_server_url: ${{ secrets.ML_SERVER_URL }}
           TF_VAR_discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
@@ -124,4 +125,4 @@ jobs:
           -d '{"content": "❌ Deployment failed for stockie-service!\n\nError: ${{ steps.deploy.outputs.error }}\nCommit: ${{ github.sha }}"}' \
           ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK_URL }}
           
-          gcloud run services update stockie-backend --image asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-service:<last-successful-image-tag> --region asia-southeast1
+          gcloud run services update stockie-service --image asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-service:<last-successful-image-tag> --region asia-southeast1

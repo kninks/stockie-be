@@ -9,8 +9,14 @@ resource "google_cloud_run_service" "stockie" {
 
   template {
     spec {
+      service_account_name = var.service_account_email
+
       containers {
         image = "asia.gcr.io/${var.project_id}/stockie-service:${var.image_tag}"
+
+        ports {
+          container_port = 8080
+        }
 
         env {
           name  = "DATABASE_URL"
@@ -65,6 +71,11 @@ resource "google_cloud_run_service" "stockie" {
   traffic {
     percent         = 100
     latest_revision = true
+  }
+
+  timeouts {
+    create = "10m"
+    update = "10m"
   }
 }
 

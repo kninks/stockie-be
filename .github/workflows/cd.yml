@@ -98,14 +98,14 @@
 #        if: success()
 #        run: |
 #          curl -X POST -H "Content-Type: application/json" \
-#          -d '{"content": "✅ Deployment succeeded for stockie-backend!\n\nDeployed Image: asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-backend:${{ needs.build.outputs.image_tag }}\nCommit: ${{ github.sha }}\nView it at: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"}' \
+#          -d '{"content": "✅ Deployment succeeded for stockie-service!\n\nDeployed Image: asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-service:${{ needs.build.outputs.image_tag }}\nCommit: ${{ github.sha }}\nView it at: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"}' \
 #          ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK_URL }}
 #
 #      - name: Notify Discord on Failure
 #        if: failure()
 #        run: |
 #          curl -X POST -H "Content-Type: application/json" \
-#          -d '{"content": "❌ Deployment failed for stockie-backend!\n\nError: ${{ steps.deploy.outputs.error }}\nCommit: ${{ github.sha }}"}' \
+#          -d '{"content": "❌ Deployment failed for stockie-service!\n\nError: ${{ steps.deploy.outputs.error }}\nCommit: ${{ github.sha }}"}' \
 #          ${{ secrets.DISCORD_DEPLOYMENT_WEBHOOK_URL }}
 #
-#          gcloud run services update stockie-backend --image asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-backend:<last-successful-image-tag> --region asia-southeast1
+#          gcloud run services update stockie-service --image asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/stockie-service:<last-successful-image-tag> --region asia-southeast1

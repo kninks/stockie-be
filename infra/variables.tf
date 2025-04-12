@@ -5,6 +5,7 @@ variable "region" {
 variable "image_tag" {}
 
 # Secrets (will be passed via TF_VAR_*)
+variable "service_account_email" {}
 variable "database_url" {}
 variable "ml_server_url" {}
 variable "discord_webhook_url" {}
