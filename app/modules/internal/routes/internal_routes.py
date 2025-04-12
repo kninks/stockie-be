@@ -23,6 +23,16 @@ router = APIRouter(
 )
 
 
+@router.post("/rank-predictions/all", tags=["Internal"])
+async def rank_predictions_all_route(
+    request: RankPredictionsRequestSchema,
+    controller: InternalController = Depends(get_internal_controller),
+    db: AsyncSession = Depends(get_db),
+):
+    await controller.rank_predictions_controller(request=request, db=db)
+    return success_response()
+
+
 @router.post("/rank-predictions", tags=["Internal"])
 async def rank_predictions_route(
     request: RankPredictionsRequestSchema,
@@ -30,6 +40,16 @@ async def rank_predictions_route(
     db: AsyncSession = Depends(get_db),
 ):
     await controller.rank_predictions_controller(request=request, db=db)
+    return success_response()
+
+
+@router.post("/pull-trading-data/all", tags=["Internal"])
+async def pull_trading_data_all_route(
+    request: PullTradingDataRequestSchema,
+    controller: InternalController = Depends(get_internal_controller),
+    db: AsyncSession = Depends(get_db),
+):
+    await controller.pull_trading_data_controller(request=request, db=db)
     return success_response()
 
 

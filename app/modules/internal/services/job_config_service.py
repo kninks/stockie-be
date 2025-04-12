@@ -40,7 +40,7 @@ class JobConfigService:
 
     async def get_job_config(
         self, db: AsyncSession, key: JobConfigEnum
-    ) -> str | int | bool | list[int] | datetime :
+    ) -> str | int | bool | list[int] | datetime:
         validate_required(key, "key")
         cache_key = f"config:{key}"
         cached = await self.redis_client.get(cache_key)
@@ -51,7 +51,7 @@ class JobConfigService:
 
         config = await self.job_config_repository.fetch_by_key(db=db, key=key)
         validate_entity_exists(config, "config")
-        return self._smart_cast(key=config.key,value=config.value)
+        return self._smart_cast(key=config.key, value=config.value)
 
     async def get_job_configs(
         self, db: AsyncSession, keys: list[JobConfigEnum]
@@ -61,13 +61,24 @@ class JobConfigService:
         if len(keys) == 1:
             config = await self.job_config_repository.fetch_by_key(db=db, key=keys[0])
             configs_dict = (
-                [{JobConfigEnum(config.key): self._smart_cast(key=config.key, value=config.value)}]
+                [
+                    {
+                        JobConfigEnum(config.key): self._smart_cast(
+                            key=config.key, value=config.value
+                        )
+                    }
+                ]
                 if config
                 else []
             )
         else:
             configs = await self.job_config_repository.fetch_by_keys(db=db, keys=keys)
-            configs_dict = {JobConfigEnum(config.key): self._smart_cast(key=config.key,value=config.value) for config in configs}
+            configs_dict = {
+                JobConfigEnum(config.key): self._smart_cast(
+                    key=config.key, value=config.value
+                )
+                for config in configs
+            }
 
         validate_entity_exists(configs_dict, "configs_dict")
         validate_exact_length(configs_dict, len(keys), "configs_dict")
