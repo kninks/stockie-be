@@ -39,9 +39,9 @@ class Config:
                 "Invalid LOG_LEVEL, must be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL"
             )
 
-        allowed_origins = os.getenv("ALLOWED_ORIGINS", "https://stockie-fe.vercel.app/,")
+        # allowed_origins = os.getenv("ALLOWED_ORIGINS", "https://stockie-fe.vercel.app/")
+        allowed_origins = "https://stockie-fe.vercel.app,http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000,http://127.0.0.1:8000,http://localhost:8001,http://127.0.0.1:8001"
         self.ALLOWED_ORIGINS = [origin.strip() for origin in allowed_origins.split(",")]
-        logger.critical(f"To Be Remove: Allowed origins: {self.ALLOWED_ORIGINS}")
 
     @staticmethod
     def _require_env(var_name: str, default_value: Optional[str] = None) -> str:
