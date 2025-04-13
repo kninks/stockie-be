@@ -16,10 +16,14 @@ from app.core.common.exceptions.exception_handlers import (
     starlette_http_exception_handler,
 )
 from app.core.common.middleware.logging_middleware import logging_middleware_factory
-
 # from app.core.common.middleware.role_auth_middleware import role_auth_middleware_factory
-from app.core.settings.config import config
+
 from app.core.settings.logging_config import setup_logging
+setup_logging("INFO")
+
+from app.core.settings.config import get_config
+config = get_config()
+
 from app.modules.dummy import dummy_routes
 
 # from app.modules.general.routes import general_routes
@@ -29,7 +33,7 @@ from app.modules.public.routes import public_routes
 
 # from app.schedulers.scheduler import register_all_jobs, start_scheduler
 
-setup_logging()
+
 logger = logging.getLogger(__name__)
 logger.setLevel(config.LOG_LEVEL)
 

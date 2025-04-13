@@ -3,7 +3,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.common.exceptions.custom_exceptions import AuthError, ForbiddenError
 from app.core.enums.roles_enum import RoleEnum
-from app.core.settings.config import config
+from app.core.settings.config import get_config
 
 
 class RoleAuthMiddleware(BaseHTTPMiddleware):
@@ -15,7 +15,7 @@ class RoleAuthMiddleware(BaseHTTPMiddleware):
         if not api_key:
             raise AuthError("API Key missing")
 
-        allowed_roles = config.ALLOWED_API_KEYS
+        allowed_roles = get_config().ALLOWED_API_KEYS
         for role, key in allowed_roles.items():
             if api_key == key:
                 request.state.user_role = role

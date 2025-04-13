@@ -4,17 +4,15 @@ from typing import Optional
 
 from app.core.enums.roles_enum import RoleEnum
 
-# from dotenv import load_dotenv
-
-
-# if os.getenv("ENVIRONMENT") != "cloud_run":
-#     load_dotenv()
-
 logger = logging.getLogger(__name__)
-
 
 class Config:
     def __init__(self):
+        from dotenv import load_dotenv
+
+        if os.getenv("ENVIRONMENT", "local") == "local":
+            load_dotenv()
+
         self.DATABASE_URL = self._require_env("DATABASE_URL")
         self.ML_SERVER_URL = self._require_env("ML_SERVER_URL")
         self.DISCORD_WEBHOOK_URL = self._require_env("DISCORD_WEBHOOK_URL")
@@ -43,7 +41,7 @@ class Config:
 
         allowed_origins = os.getenv("ALLOWED_ORIGINS", "https://stockie-fe.vercel.app/,")
         self.ALLOWED_ORIGINS = [origin.strip() for origin in allowed_origins.split(",")]
-        logger.info(f"Allowed origins: {self.ALLOWED_ORIGINS}")
+        logger.critical(f"To Be Remove: Allowed origins: {self.ALLOWED_ORIGINS}")
 
     @staticmethod
     def _require_env(var_name: str, default_value: Optional[str] = None) -> str:
@@ -62,5 +60,10 @@ class Config:
             )
         return value
 
+_config = None
 
-config = Config()
+def get_config():
+    global _config
+    if _config is None:
+        _config = Config()
+    return _config
