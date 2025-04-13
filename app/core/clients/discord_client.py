@@ -4,14 +4,14 @@ from typing import Any, Optional
 import httpx
 
 from app.core.enums.job_enum import JobStatusEnum, JobTypeEnum
-from app.core.settings.config import config
+from app.core.settings.config import get_config
 
 logger = logging.getLogger(__name__)
 
 
 class DiscordClient:
     def __init__(self):
-        self.base_url = config.DISCORD_WEBHOOK_URL
+        self.base_url = get_config().DISCORD_WEBHOOK_URL
 
     async def post(self, data: Optional[dict[str, Any]] = None) -> Any:
         return await self._request("POST", json=data)
