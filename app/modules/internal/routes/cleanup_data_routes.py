@@ -12,7 +12,7 @@ from app.modules.internal.controllers.cleanup_data_controller import (
 
 router = APIRouter(
     prefix="/clean",
-    tags=["Cleanup Data"],
+    tags=["[Internal] Cleanup Data"],
 )
 
 
@@ -33,8 +33,8 @@ async def clean_data_route(
     return success_response()
 
 
-@router.delete("/features")
-async def clean_features_route(
+@router.delete("/trading_data")
+async def clean_trading_data_route(
     db: AsyncSession = Depends(get_db),
     controller: CleanupDataController = Depends(get_cleanup_data_controller),
     target_date: date = Query(...),

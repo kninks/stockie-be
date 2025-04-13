@@ -5,16 +5,17 @@ from apscheduler.triggers.cron import CronTrigger
 from app.core.clients.discord_client import get_discord_operations
 from app.core.enums.job_enum import JobConfigEnum, JobStatusEnum, JobTypeEnum
 from app.core.settings.database import AsyncSessionLocal
-from app.modules.internal.services.internal_service import get_internal_service
 from app.modules.internal.services.job_config_service import get_job_config_service
+from app.modules.internal.services.process_data_service import get_process_data_service
 from app.modules.ml_ops.services.inference_service import get_inference_service
 
 job_config_service = get_job_config_service()
 inference_service = get_inference_service()
-internal_service = get_internal_service()
+internal_service = get_process_data_service()
 discord = get_discord_operations()
 
 
+# ok
 # run inference daily
 async def job_run_and_save_inference():
     async with AsyncSessionLocal() as db:
@@ -94,6 +95,7 @@ async def job_run_and_save_inference():
             )
 
 
+# ok
 async def job_rank_predictions():
     async with AsyncSessionLocal() as db:
         configs = await job_config_service.get_job_configs(

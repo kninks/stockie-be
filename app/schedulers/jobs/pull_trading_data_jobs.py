@@ -5,14 +5,15 @@ from apscheduler.triggers.cron import CronTrigger
 from app.core.clients.discord_client import get_discord_operations
 from app.core.enums.job_enum import JobConfigEnum, JobStatusEnum, JobTypeEnum
 from app.core.settings.database import AsyncSessionLocal
-from app.modules.internal.services.internal_service import get_internal_service
 from app.modules.internal.services.job_config_service import get_job_config_service
+from app.modules.internal.services.process_data_service import get_process_data_service
 
 job_config_service = get_job_config_service()
-internal_service = get_internal_service()
+internal_service = get_process_data_service()
 discord = get_discord_operations()
 
 
+# OK
 # run inference daily
 async def job_trading_data():
     async with AsyncSessionLocal() as db:

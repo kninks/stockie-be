@@ -1,17 +1,17 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.internal.schemas.internal_schema import (
+from app.modules.internal.schemas.process_data_schema import (
     PullTradingDataRequestSchema,
     RankPredictionsRequestSchema,
 )
-from app.modules.internal.services.internal_service import (
-    InternalService,
-    get_internal_service,
+from app.modules.internal.services.process_data_service import (
+    ProcessDataService,
+    get_process_data_service,
 )
 
 
-class InternalController:
-    def __init__(self, service: InternalService):
+class ProcessDataController:
+    def __init__(self, service: ProcessDataService):
         self.service = service
 
     async def rank_predictions_controller(
@@ -34,5 +34,5 @@ class InternalController:
         return response
 
 
-def get_internal_controller() -> InternalController:
-    return InternalController(service=get_internal_service())
+def get_process_data_controller() -> ProcessDataController:
+    return ProcessDataController(service=get_process_data_service())

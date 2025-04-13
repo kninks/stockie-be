@@ -6,6 +6,7 @@ from app.core.enums.roles_enum import RoleEnum
 
 logger = logging.getLogger(__name__)
 
+
 class Config:
     def __init__(self):
         from dotenv import load_dotenv
@@ -60,7 +61,9 @@ class Config:
             )
         return value
 
+
 _config = None
+
 
 def get_config():
     global _config
