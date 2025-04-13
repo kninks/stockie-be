@@ -16,12 +16,16 @@ from app.core.common.exceptions.exception_handlers import (
     starlette_http_exception_handler,
 )
 from app.core.common.middleware.logging_middleware import logging_middleware_factory
+from app.core.settings.logging_config import setup_logging
+from app.modules.scheduler_jobs import scheduler_job_routes
+
 # from app.core.common.middleware.role_auth_middleware import role_auth_middleware_factory
 
-from app.core.settings.logging_config import setup_logging
+
 setup_logging("INFO")
 
 from app.core.settings.config import get_config
+
 config = get_config()
 
 from app.modules.dummy import dummy_routes
@@ -78,7 +82,9 @@ app.add_exception_handler(
     CustomAPIError, cast(ExceptionHandler, custom_api_exception_handler)
 )
 
+
 app.include_router(public_routes.router)
+app.include_router(scheduler_job_routes.router)
 app.include_router(internal_routes.router)
 app.include_router(ml_ops_routes.router)
 # app.include_router(general_routes.router)

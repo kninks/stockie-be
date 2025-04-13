@@ -12,7 +12,7 @@ from app.models import Prediction, TopPrediction
 logger = logging.getLogger(__name__)
 
 
-class InternalRepository:
+class ProcessDataRepository:
     @staticmethod
     async def create_top_prediction_and_update_ranks(
         db: AsyncSession,

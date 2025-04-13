@@ -13,6 +13,7 @@ evaluate_service = get_evaluation_service()
 discord = get_discord_operations()
 
 
+# ok
 # run inference daily
 async def job_evaluate_accuracy():
     async with AsyncSessionLocal() as db:

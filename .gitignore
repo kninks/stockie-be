@@ -246,3 +246,8 @@ cython_debug/
 
 /stockie-be.iml
 /logs
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup

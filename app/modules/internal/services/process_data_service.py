@@ -20,21 +20,23 @@ from app.modules.general.services.trading_data_service import (
     TradingDataService,
     get_trading_data_service,
 )
-from app.modules.internal.repositories.internal_repository import InternalRepository
+from app.modules.internal.repositories.process_data_repository import (
+    ProcessDataRepository,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class InternalService:
+class ProcessDataService:
     def __init__(
         self,
-        internal_repository: InternalRepository,
+        process_data_repository: ProcessDataRepository,
         stock_service: StockService,
         prediction_service: PredictionService,
         top_prediction_service: TopPredictionService,
         trading_data_service: TradingDataService,
     ):
-        self.internal_repository = internal_repository
+        self.process_data_repository = process_data_repository
         self.stock_service = stock_service
         self.prediction_service = prediction_service
         self.top_prediction_service = top_prediction_service
@@ -82,7 +84,7 @@ class InternalService:
         print(ranked_predictions)
 
         try:
-            await self.internal_repository.create_top_prediction_and_update_ranks(
+            await self.process_data_repository.create_top_prediction_and_update_ranks(
                 db=db,
                 industry_code=industry_code,
                 target_date=target_date,
@@ -148,9 +150,9 @@ class InternalService:
             raise DBError("Failed to pull closing prices") from e
 
 
-def get_internal_service() -> InternalService:
-    return InternalService(
-        internal_repository=InternalRepository(),
+def get_process_data_service() -> ProcessDataService:
+    return ProcessDataService(
+        process_data_repository=ProcessDataRepository(),
         stock_service=get_stock_service(),
         prediction_service=get_prediction_service(),
         top_prediction_service=get_top_prediction_service(),
