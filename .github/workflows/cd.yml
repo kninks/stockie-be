@@ -92,7 +92,7 @@ jobs:
             ML_SERVER_API_KEY=${{ secrets.ML_SERVER_API_KEY }}
             DEBUG=${{ vars.DEBUG }}
             LOG_LEVEL=${{ vars.LOG_LEVEL }}
-            ALLOWED_ORIGINS="${{ vars.ALLOWED_ORIGINS }}"
+            ALLOWED_ORIGINS="https://stockie-fe.vercel.app,http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000,http://127.0.0.1:8000,http://localhost:8001,http://127.0.0.1:8001"
 
       - name: Notify Discord on Success
         if: success()
