@@ -92,7 +92,7 @@ jobs:
             ML_SERVER_API_KEY=${{ secrets.ML_SERVER_API_KEY }}
             DEBUG=${{ vars.DEBUG }}
             LOG_LEVEL=${{ vars.LOG_LEVEL }}
-            ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}
+            ALLOWED_ORIGINS="${{ vars.ALLOWED_ORIGINS }}"
 
       - name: Notify Discord on Success
         if: success()
