@@ -41,8 +41,9 @@ class Config:
                 "Invalid LOG_LEVEL, must be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL"
             )
 
-        allowed_origins = os.getenv("ALLOWED_ORIGINS", "https://stockie-fe.vercel.app/")
+        allowed_origins = os.getenv("ALLOWED_ORIGINS", "https://stockie-fe.vercel.app/,")
         self.ALLOWED_ORIGINS = [origin.strip() for origin in allowed_origins.split(",")]
+        logger.info(f"Allowed origins: {self.ALLOWED_ORIGINS}")
 
     @staticmethod
     def _require_env(var_name: str, default_value: Optional[str] = None) -> str:
