@@ -41,7 +41,7 @@ class Config:
             )
 
         # allowed_origins = os.getenv("ALLOWED_ORIGINS", "https://stockie-fe.vercel.app/")
-        allowed_origins = "https://stockie-fe.vercel.app,http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000,http://127.0.0.1:8000,http://localhost:8001,http://127.0.0.1:8001"
+        allowed_origins = "https://stockie-fe.vercel.app,https://stockie-ml-996128501833.asia-southeast1.run.app,http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000,http://127.0.0.1:8000,http://localhost:8001,http://127.0.0.1:8001"
         self.ALLOWED_ORIGINS = [origin.strip() for origin in allowed_origins.split(",")]
 
     @staticmethod
