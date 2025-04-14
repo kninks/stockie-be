@@ -181,6 +181,34 @@ class StockService:
         validate_entity_exists(stock, f"Stock '{stock_ticker}'")
         return stock
 
+    async def update_by_ticker(
+        self,
+        db: AsyncSession,
+        stock_ticker: str,
+        industry_code: Optional[IndustryCodeEnum] = None,
+        stock_name: Optional[str] = None,
+        is_active: Optional[bool] = None,
+        stock_description: Optional[str] = None,
+    ) -> Stock:
+        validate_required(stock_ticker, "stock ticker")
+        normalized_stock_ticker = normalize_stock_ticker(stock_ticker)
+
+        try:
+            stock = await self.stock_repo.update_by_ticker(
+                db=db,
+                stock_ticker=normalized_stock_ticker,
+                industry_code=industry_code,
+                stock_name=stock_name,
+                is_active=is_active,
+                stock_description=stock_description,
+            )
+        except Exception as e:
+            logger.error(f"Failed to update stock '{stock_ticker}': {e}")
+            raise DBError("Failed to update stock") from e
+
+        validate_entity_exists(stock, f"Stock '{stock_ticker}'")
+        return stock
+
 
 def get_stock_service() -> StockService:
     return StockService(stock_repository=StockRepository())

@@ -1,35 +1,14 @@
 from datetime import date
-from typing import Optional
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.enums.industry_code_enum import IndustryCodeEnum
-from app.models import Stock
 from app.modules.dummy.dummy_service import DummyService, get_dummy_service
 
 
 class DummyController:
     def __init__(self, service: DummyService):
         self.dummy_service = service
-
-    async def insert_stock_controller(
-        self,
-        db: AsyncSession,
-        stock_ticker: str,
-        industry_code: IndustryCodeEnum,
-        stock_name: str,
-        stock_description: Optional[str],
-    ) -> Stock:
-        response = await self.dummy_service.insert_stock(
-            db=db,
-            stock_ticker=stock_ticker,
-            industry_code=industry_code,
-            stock_name=stock_name,
-            stock_description=stock_description,
-        )
-        serialized_data = jsonable_encoder(response)
-        return serialized_data
 
     async def generate_dummy_trading_data_controller(
         self,

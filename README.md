@@ -2,7 +2,6 @@
 # Stockie BE
 
 ## 📖 Table of Contents
-- 📁 [Project Structure](#project-structure)
 - 🛠 [Project Setup (Local Development)](#project-setup-local-development)
     - ⚙️ [Prerequisites](#prerequisites)
     - 📥 [Installation](#installation)
@@ -11,84 +10,6 @@
 - 👾 [Troubleshooting](#troubleshooting)
 - 🤝 [Contributing](#contributing)
 - 📝 [Resources](#resources)
-
-## Project structure
-```
-stockie-be/
-│── 📂 app                    # 🚀 Main backend application
-│   │── 📂 api                # 🌍 API Layer (Controllers & Routes)
-│   │   │── 📂 controllers    # 🎯 Controllers handle incoming requests
-│   │   │   │── client
-│   │   │   │   ├── stock_controller.py
-│   │   │   │   ├── user_controller.py
-│   │   │   │   ├── __init__.py
-│   │   │   │── ml
-│   │   │   │   ├── ml_controller.py
-│   │   │   │   ├── __init__.py
-│   │   │── 📂 routes         # 🚏 FastAPI Routers (Define API endpoints)
-│   │   │   │── client
-│   │   │   │   ├── stock_routes.py
-│   │   │   │   ├── user_routes.py
-│   │   │   │   ├── __init__.py
-│   │   │   │── ml
-│   │   │   │   ├── ml_routes.py
-│   │   │   │   ├── __init__.py
-│   │── 📂 core               # ⚙️ Application settings
-│   │   ├── config.py         # App-wide settings (DB, API keys, etc.)
-│   │   ├── database.py       # DB setup (SQLAlchemy)
-│   │   ├── logging_config.py # Logging configuration
-│   │   └── __init__.py
-│   │── 📂 models             # 🏛 ORM models (SQLAlchemy)
-│   │   │── client
-│   │   │   ├── stock_model.py
-│   │   │   ├── user_model.py
-│   │   │   ├── __init__.py
-│   │   │── ml
-│   │   │   ├── ml_model.py
-│   │   │   ├── __init__.py
-│   │── 📂 repositories       # 💾 Database queries (Repositories)
-│   │   │── client
-│   │   │   ├── stock_repository.py
-│   │   │   ├── user_repository.py
-│   │   │   ├── __init__.py
-│   │   │── ml
-│   │   │   ├── ml_repository.py
-│   │   │   ├── __init__.py
-│   │── 📂 schemas            # 📝 Pydantic Schemas (Request/Response)
-│   │   │── client
-│   │   │   ├── stock_schema.py
-│   │   │   ├── user_schema.py
-│   │   │   ├── __init__.py
-│   │   │── ml
-│   │   │   ├── ml_schema.py
-│   │   │   ├── __init__.py
-│   │── 📂 services           # 🧠 Business logic (Service layer)
-│   │   │── client
-│   │   │   ├── stock_service.py
-│   │   │   ├── user_service.py
-│   │   │   ├── __init__.py
-│   │   │── ml
-│   │   │   ├── ml_service.py
-│   │   │   ├── __init__.py
-│   │── 📂 middleware         # 🛡 Middleware (Logging, Auth, etc.)
-│   │   ├── logging_middleware.py
-│   │   ├── auth_middleware.py
-│   │   └── __init__.py
-│   │── 📂 exceptions         # ⚠️ Custom exceptions & handlers
-│   │   ├── custom_exceptions.py
-│   │   ├── exception_handlers.py
-│   │   └── __init__.py
-│   │── 📂 utils              # 🔧 Helper utilities
-│   │   ├── response_handler.py
-│   │   ├── error_codes.py
-│   │   ├── date_utils.py
-│   │   └── __init__.py
-│   │── main.py               # 🚀 FastAPI app entry point
-│── 📂 tests                  # ✅ Unit & integration tests
-│── .env                      # 📌 Environment variables
-│── requirements.txt          # 📦 Dependencies
-│── README.md                 # 📖 Project documentation
-```
 
 ## Project setup (Local Development)
 For first time setup of the project, follow the steps below:
@@ -125,41 +46,14 @@ For first time setup of the project, follow the steps below:
 
 5. Create a `.env` file in the root directory and add the environment variables (please ask for the variables from the team)
 
+6. If you are working with scheduler, currently we are using terraform to deploy the scheduler to google cloud scheduler
+   - Please make sure you have the following installed
+     - [Terraform](https://www.terraform.io/downloads.html)
+     - login to gcloud with the permitted account
+
 You're all set! 🚀
 To start the development server, follow the next section.
 
-### Running docker locally
-
-For this repo, mostly you will want to compose up the docker only when you want to test the scheduler or job config
-
-- Prerequisite: Make sure you have Docker/Orb stack installed and running
-   - [Docker Desktop](https://www.docker.com/products/docker-desktop)
-   - [Docker CLI](https://docs.docker.com/engine/install/)
-   - [Docker Compose](https://docs.docker.com/compose/install/)
-
-1. Pull the img
-2. Compose up docker dev if you have never built the image or no changes are made to the Dockerfile (no need to run in python venv).
-
-   If you have already built the docker image, and no changes are made to the Dockerfile, you can skip the build step
-    ```bash
-    docker-compose -f docker-compose.dev.yml up --build
-    ```
-    simulate prod env
-    ```bash
-    docker-compose -f docker-compose.prod.yml up --build
-    ```
-3. Compose up docker dev if you have already built the image and no changes are made to the Dockerfile
-    ```bash
-    docker-compose -f docker-compose.dev.yml up
-    ```
-    simulate prod env
-    ```bash
-    docker-compose -f docker-compose.prod.yml up
-    ```
-4. compose down
-    ```bash
-    docker-compose -f docker-compose.dev.yml down
-    ```
 
 ## Running the server
 
@@ -196,6 +90,40 @@ For this repo, mostly you will want to compose up the docker only when you want 
     ```bash
     pytest
     ```
+
+### Running docker locally
+
+For this repo, mostly you will want to compose up the docker only when you want to test the scheduler or job config
+
+- Prerequisite: Make sure you have Docker/Orb stack installed and running
+    - [Docker Desktop](https://www.docker.com/products/docker-desktop)
+    - [Docker CLI](https://docs.docker.com/engine/install/)
+    - [Docker Compose](https://docs.docker.com/compose/install/)
+
+1. Pull the img
+2. Compose up docker dev if you have never built the image or no changes are made to the Dockerfile (no need to run in python venv).
+
+   If you have already built the docker image, and no changes are made to the Dockerfile, you can skip the build step
+    ```bash
+    docker-compose -f docker-compose.dev.yml up --build
+    ```
+   simulate prod env
+    ```bash
+    docker-compose -f docker-compose.prod.yml up --build
+    ```
+3. Compose up docker dev if you have already built the image and no changes are made to the Dockerfile
+    ```bash
+    docker-compose -f docker-compose.dev.yml up
+    ```
+   simulate prod env
+    ```bash
+    docker-compose -f docker-compose.prod.yml up
+    ```
+4. compose down
+    ```bash
+    docker-compose -f docker-compose.dev.yml down
+    ```
+   
 
 ## Troubleshooting
 
@@ -237,6 +165,17 @@ This project uses Alembic to handle database schema migrations
 - To apply the migrations, run
     ```bash
     alembic upgrade head
+    ```
+
+### Scheduler
+- To schedule a job, please go to `/infra` and add the job to the `scheduler.tf` file
+- To deploy the scheduler, run the following command
+    ```bash
+    terraform init        # Only once per setup or if providers/backend changes
+    terraform fmt         # (Optional) Format files nicely
+    terraform validate    # (Optional) Check for syntax issues
+    terraform plan        # See what changes will happen
+    terraform apply       # Actually apply the changes
     ```
 
 ## Resources

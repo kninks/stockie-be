@@ -3,7 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.common.utils.response_handlers import success_response
 from app.core.dependencies.db_session import get_db
-from app.modules.scheduler_jobs.scheduler_job_controller import SchedulerJobController, get_scheduler_job_controller
+from app.modules.scheduler_jobs.scheduler_job_controller import (
+    SchedulerJobController,
+    get_scheduler_job_controller,
+)
 
 router = APIRouter(
     prefix="/jobs",

@@ -88,16 +88,6 @@ class InferenceController:
         )
         return response
 
-    # async def save_only(
-    #     self,
-    #     request: SaveInferenceResultRequestSchema,
-    #     db: AsyncSession,
-    # ) -> None:
-    #     response = await self.service._save_success_inference_results(
-    #         inference_results=request.inference_results, db=db
-    #     )
-    #     return response
-
 
 def get_inference_controller() -> InferenceController:
     return InferenceController(service=get_inference_service())

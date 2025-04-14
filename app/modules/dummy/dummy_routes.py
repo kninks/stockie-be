@@ -8,7 +8,6 @@ from app.core.common.utils.response_handlers import (
 )
 from app.core.dependencies.api_key_auth import verify_role
 from app.core.dependencies.db_session import get_db
-from app.core.enums.industry_code_enum import IndustryCodeEnum
 from app.modules.dummy.dummy_controller import DummyController, get_dummy_controller
 
 router = APIRouter(
@@ -16,25 +15,6 @@ router = APIRouter(
     tags=["Dummy"],
     dependencies=[Depends(verify_role([]))],
 )
-
-
-@router.post("/insert-stock")
-async def insert_stock(
-    stock_ticker: str = Query(...),
-    industry_code: IndustryCodeEnum = Query(...),
-    stock_name: str = Query(...),
-    stock_description: str = Query(None),
-    db: AsyncSession = Depends(get_db),
-    controller: DummyController = Depends(get_dummy_controller),
-):
-    response = await controller.insert_stock_controller(
-        db=db,
-        stock_ticker=stock_ticker,
-        industry_code=industry_code,
-        stock_name=stock_name,
-        stock_description=stock_description,
-    )
-    return success_response(data=response)
 
 
 @router.post("/trading-data")
