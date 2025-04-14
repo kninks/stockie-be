@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-#  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -25,15 +24,7 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-#          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-#          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
 
-#      - name: Set up gcloud CLI
-#        uses: google-github-actions/setup-gcloud@v2
-#        with:
-#          project_id: ${{ secrets.GCP_PROJECT_ID }}
-#        env:
-#          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_WIF_CONFIG }}
       - name: Configure Docker to use gcloud credentials
         run: |
           gcloud auth configure-docker --quiet
@@ -71,9 +62,6 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-#          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-#          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
-
 
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2

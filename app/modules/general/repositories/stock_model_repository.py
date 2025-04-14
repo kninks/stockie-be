@@ -174,13 +174,10 @@ class StockModelRepository:
         await db.commit()
         return result.rowcount
 
-    @staticmethod
     async def update_by_stock_ticker(
-        db: AsyncSession, stock_ticker: str, update_data: dict
+        self, db: AsyncSession, stock_ticker: str, update_data: dict
     ) -> Optional[StockModel]:
-        stock_model = await StockModelRepository.fetch_active_by_stock_ticker(
-            db, stock_ticker
-        )
+        stock_model = await self.fetch_active_by_stock_ticker(db, stock_ticker)
         if stock_model:
             for key, value in update_data.items():
                 setattr(stock_model, key, value)
@@ -189,13 +186,10 @@ class StockModelRepository:
             return stock_model
         return None
 
-    @staticmethod
     async def update_by_stock_tickers(
-        db: AsyncSession, stock_tickers: list[str], update_data: dict
+        self, db: AsyncSession, stock_tickers: list[str], update_data: dict
     ) -> int:
-        stock_model = await StockModelRepository.fetch_active_by_stock_tickers(
-            db, stock_tickers
-        )
+        stock_model = await self.fetch_active_by_stock_tickers(db, stock_tickers)
         if stock_model or len(stock_model) != 0:
             stmt = (
                 update(StockModel)
@@ -207,9 +201,8 @@ class StockModelRepository:
             return result.rowcount
         return 0
 
-    @staticmethod
-    async def delete_by_id(db: AsyncSession, stock_model_id: int) -> bool:
-        stock_model = await StockModelRepository.fetch_by_id(db, stock_model_id)
+    async def delete_by_id(self, db: AsyncSession, stock_model_id: int) -> bool:
+        stock_model = await self.fetch_by_id(db, stock_model_id)
         if stock_model:
             await db.delete(stock_model)
             await db.commit()

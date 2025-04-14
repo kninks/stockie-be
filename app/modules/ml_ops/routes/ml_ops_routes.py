@@ -5,7 +5,7 @@ from app.core.enums.roles_enum import RoleEnum
 from app.modules.ml_ops.routes import (
     evaluation_routes,
     inference_routes,
-    model_metadata_routes,
+    metadata_routes,
 )
 
 router = APIRouter(
@@ -15,4 +15,4 @@ router = APIRouter(
 
 router.include_router(evaluation_routes.router)
 router.include_router(inference_routes.router)
-router.include_router(model_metadata_routes.router)
+router.include_router(metadata_routes.router)

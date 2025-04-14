@@ -110,3 +110,28 @@ class StockRepository:
         await db.commit()
         await db.refresh(stock)
         return stock
+
+    async def update_by_ticker(
+        self,
+        db: AsyncSession,
+        stock_ticker: str,
+        industry_code: Optional[IndustryCodeEnum],
+        stock_name: Optional[str],
+        is_active: Optional[bool],
+        stock_description: Optional[str] = None,
+    ) -> Optional[Stock]:
+        stock = await self.fetch_by_ticker(db=db, stock_ticker=stock_ticker)
+
+        if stock:
+            if industry_code:
+                stock.industry_code = industry_code
+            if stock_name:
+                stock.name = stock_name
+            if is_active is not None:
+                stock.is_active = is_active
+            if stock_description:
+                stock.description = stock_description
+            await db.commit()
+            await db.refresh(stock)
+            return stock
+        return None

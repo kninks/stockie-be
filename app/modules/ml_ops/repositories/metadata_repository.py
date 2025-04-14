@@ -12,7 +12,7 @@ from app.models import StockModel
 logger = logging.getLogger(__name__)
 
 
-class ModelMetadataRepository:
+class MetadataRepository:
     @staticmethod
     async def update_and_create_model_metadata(
         db: AsyncSession,

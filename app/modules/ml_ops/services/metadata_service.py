@@ -8,30 +8,90 @@ from app.core.common.utils.validators import (
     validate_entity_exists,
     validate_required,
 )
+from app.core.enums.industry_code_enum import IndustryCodeEnum
 from app.core.enums.trading_data_enum import TradingDataEnum
-from app.models import StockModel
+from app.models import Stock, StockModel
 from app.modules.general.services.stock_model_service import (
     StockModelService,
     get_stock_model_service,
 )
-from app.modules.ml_ops.repositories.model_metadata_repository import (
-    ModelMetadataRepository,
+from app.modules.general.services.stock_service import StockService, get_stock_service
+from app.modules.ml_ops.repositories.metadata_repository import (
+    MetadataRepository,
 )
-from app.modules.ml_ops.schemas.model_metadata_schema import (
+from app.modules.ml_ops.schemas.metadata_schema import (
     ModelMetadataResponseSchema,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class ModelMetadataService:
+class MetadataService:
     def __init__(
         self,
-        model_metadata_repository: ModelMetadataRepository,
+        metadata_repository: MetadataRepository,
         stock_model_service: StockModelService,
+        stock_service: StockService,
     ):
-        self.model_metadata_repo = model_metadata_repository
+        self.metadata_repo = metadata_repository
         self.stock_model_service = stock_model_service
+        self.stock_service = stock_service
+
+    async def insert_stock(
+        self,
+        db: AsyncSession,
+        stock_ticker: str,
+        industry_code: IndustryCodeEnum,
+        stock_name: str,
+        stock_description: Optional[str],
+    ) -> Optional[Stock]:
+        try:
+            stock = await self.stock_service.create_stock(
+                db=db,
+                stock_ticker=stock_ticker,
+                industry_code=industry_code,
+                stock_name=stock_name,
+                stock_description=stock_description,
+            )
+            if not stock:
+                logger.error(f"Failed to create stock: {stock_ticker}")
+                return None
+
+            return stock
+        except Exception as e:
+            logger.error(f"Failed to insert stock: {e}")
+            raise e
+
+    async def update_stock(
+        self,
+        db: AsyncSession,
+        stock_ticker: str,
+        industry_code: Optional[IndustryCodeEnum] = None,
+        stock_name: Optional[str] = None,
+        is_active: Optional[bool] = None,
+        stock_description: Optional[str] = None,
+    ) -> Optional[Stock]:
+        validate_required(stock_ticker, "stock ticker")
+        stock_ticker = normalize_stock_ticker(stock_ticker)
+
+        try:
+            stock = await self.stock_service.update_by_ticker(
+                db=db,
+                stock_ticker=stock_ticker,
+                industry_code=industry_code,
+                stock_name=stock_name,
+                is_active=is_active,
+                stock_description=stock_description,
+            )
+            if not stock:
+                logger.error(f"Failed to update stock: {stock_ticker}")
+                return None
+
+        except Exception as e:
+            logger.error(f"Failed to update stock: {e}")
+            raise e
+        validate_entity_exists(stock, f"Stock '{stock_ticker}'")
+        return stock
 
     # DONE
     async def get_stock_model(
@@ -78,7 +138,7 @@ class ModelMetadataService:
         stock_ticker = normalize_stock_ticker(stock_ticker)
 
         try:
-            model = await self.model_metadata_repo.update_and_create_model_metadata(
+            model = await self.metadata_repo.update_and_create_model_metadata(
                 db=db,
                 stock_ticker=stock_ticker,
                 version=version,
@@ -96,8 +156,9 @@ class ModelMetadataService:
         return model
 
 
-def get_model_metadata_service() -> ModelMetadataService:
-    return ModelMetadataService(
-        model_metadata_repository=ModelMetadataRepository(),
+def get_metadata_service() -> MetadataService:
+    return MetadataService(
+        metadata_repository=MetadataRepository(),
         stock_model_service=get_stock_model_service(),
+        stock_service=get_stock_service(),
     )

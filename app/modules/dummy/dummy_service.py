@@ -1,18 +1,14 @@
 import random
 from collections import defaultdict
 from datetime import date, timedelta
-from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.common.exceptions.custom_exceptions import DBError
 from app.core.common.utils.validators import (
-    normalize_stock_ticker,
     normalize_stock_tickers,
     validate_required,
 )
-from app.core.enums.industry_code_enum import IndustryCodeEnum
-from app.models import Stock, TradingData
+from app.models import TradingData
 from app.modules.general.services.stock_model_service import (
     StockModelService,
     get_stock_model_service,
@@ -35,36 +31,6 @@ class DummyService:
         self.stock_service = stock_service
         self.stock_model_service = stock_model_service
         self.trading_data_service = trading_data_service
-
-    async def insert_stock(
-        self,
-        db: AsyncSession,
-        stock_ticker: str,
-        industry_code: IndustryCodeEnum,
-        stock_name: str,
-        stock_description: Optional[str] = None,
-    ) -> Stock:
-        validate_required(stock_ticker, "stock_ticker")
-        validate_required(industry_code, "industry_code")
-        validate_required(stock_name, "stock_name")
-        normalized_stock_ticker = normalize_stock_ticker(stock_ticker)
-
-        stock = await self.stock_service.get_by_ticker(
-            db=db,
-            stock_ticker=normalized_stock_ticker,
-        )
-        if stock:
-            DBError(f"Stock already exists: {stock.ticker}")
-
-        created_stock = await self.stock_service.create_stock(
-            db=db,
-            stock_ticker=stock_ticker,
-            stock_name=stock_name,
-            stock_description=stock_description,
-            industry_code=industry_code,
-        )
-
-        return created_stock
 
     @staticmethod
     async def generate_dummy_trading_data(

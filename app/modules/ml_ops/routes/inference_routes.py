@@ -100,13 +100,3 @@ async def get_inference_data_route(
         )
     )
     return success_response(data=response)
-
-
-# @router.post("/trigger-save")
-# async def trigger_save_only_route(
-#     request: SaveInferenceResultRequestSchema,
-#     controller: InferenceController = Depends(get_inference_controller),
-#     db: AsyncSession = Depends(get_db),
-# ):
-#     await controller.save_only(request=request, db=db)
-#     return success_response()
