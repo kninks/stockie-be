@@ -58,5 +58,5 @@ async def pull_trading_data_route(
     controller: ProcessDataController = Depends(get_process_data_controller),
     db: AsyncSession = Depends(get_db),
 ):
-    await controller.pull_trading_data_controller(request=request, db=db)
-    return success_response()
+    response = await controller.pull_trading_data_controller(request=request, db=db)
+    return success_response(data=response)

@@ -1,5 +1,6 @@
 import logging
-from datetime import date
+import yfinance as yf
+from datetime import date, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -119,32 +120,48 @@ class ProcessDataService:
             stock_tickers=stock_tickers, target_date=target_date, db=db
         )
 
-    # TODO: scrape trading data from Yahoo Finance -> validate -> save to DB
+    # DONE
     async def pull_trading_data(
         self, stock_tickers: list[str], target_date: date, db: AsyncSession
     ) -> None:
         validate_required(stock_tickers, "stock tickers")
         validate_required(target_date, "target date")
 
-        # Assuming we have a function to fetch closing prices from an external API
-        trading_data_list = [
-            {
-                "ticker": ticker,
-                "target_date": target_date,
-                "close": None,  # Placeholder for the actual closing price (float)
-                "open": None,  # Placeholder for the actual opening price (float)
-                "high": None,  # Placeholder for the actual high price (float)
-                "low": None,  # Placeholder for the actual low price (float)
-                "volumes": None,  # Placeholder for the actual volume (int)
-            }
-            for ticker in stock_tickers
-        ]
+        trading_data_list = []
+        for stock_ticker in stock_tickers:
+            try:
+                ticker = stock_ticker + str(".BK")
+                print(stock_ticker)
+                data = yf.download(ticker, start=target_date, end=target_date+ timedelta(days=1), auto_adjust=True)
+                data.columns = data.columns.droplevel(1)
+                print(data)
+                if not data.empty and len(data) >= 1:
+                    row = data.iloc[0]
+                    trading_data_list.append(
+                        {
+                            "stock_ticker": stock_ticker,
+                            "target_date": target_date,
+                            "close": float(row["Close"]),
+                            "open": float(row["Open"]),
+                            "high": float(row["High"]),
+                            "low": float(row["Low"]),
+                            "volumes": int(row["Volume"]),
+                        }
+                    )
+            except Exception as e:
+                logger.error(f"Failed to fetch data for {stock_ticker}: {e}")
+                continue
+
+        if not trading_data_list:
+            logger.warning("No trading data to save.")
+            return []
 
         try:
             await self.trading_data_service.create_multiple(
                 db=db,
                 trading_data_dict_list=trading_data_list,
             )
+            return [d["stock_ticker"] for d in trading_data_list]
         except Exception as e:
             logger.error(f"Failed to pull closing prices: {e}")
             raise DBError("Failed to pull closing prices") from e
