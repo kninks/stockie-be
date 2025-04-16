@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from datetime import date
+from datetime import date, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -104,22 +104,23 @@ class InferenceService:
                 db=db,
             )
         )
-        # inference_results: list[InferenceResultSchema] = (
-        #     await self._make_run_inference_request_to_ml_server(
-        #     await self._make_run_inference_request_to_ml_server(
-        #         inference_data=inference_data
-        #     )
-        # )
 
         inference_results: list[InferenceResultSchema] = (
-            await self.dummy_service.generate_dummy_inference_results(
-                db=db,
-                stock_tickers=stock_tickers,
-                target_date=target_date,
-                days_back=days_back,
-                days_forward=days_forward,
+            await self._make_run_inference_request_to_ml_server(
+                inference_data=inference_data,
+                days_forward=days_forward + 1,  # day 0 is the target date
             )
         )
+
+        # inference_results: list[InferenceResultSchema] = (
+        #     await self.dummy_service.generate_dummy_inference_results(
+        #         db=db,
+        #         stock_tickers=stock_tickers,
+        #         target_date=target_date,
+        #         days_back=days_back,
+        #         days_forward=days_forward,
+        #     )
+        # )
 
         success_results = [i for i in inference_results if i.success]
         failed_results = [i for i in inference_results if not i.success]
@@ -136,6 +137,7 @@ class InferenceService:
 
         saved_predictions: list[Prediction] = (
             await self._save_success_inference_results(
+                target_date=target_date,
                 inference_data=inference_data,
                 success_results=success_results,
                 periods=periods,
@@ -145,13 +147,32 @@ class InferenceService:
 
         return saved_predictions
 
-    # FIXME: Add error handling
+    async def run_inference_all(
+        self,
+        db: AsyncSession,
+        target_date: date,
+        days_back: int,
+        days_forward: int = 15,
+    ) -> list[InferenceResultSchema]:
+        stock_tickers = await self.stock_service.get_active_ticker_values(db=db)
+        inference_results: list[InferenceResultSchema] = (
+            await self.run_inference_by_stock_tickers(
+                db=db,
+                stock_tickers=stock_tickers,
+                target_date=target_date,
+                days_back=days_back,
+                days_forward=days_forward,
+            )
+        )
+        return inference_results
+
     async def run_inference_by_stock_tickers(
         self,
         db: AsyncSession,
         stock_tickers: list[str],
         target_date: date,
         days_back: int,
+        days_forward: int = 15,
     ) -> list[InferenceResultSchema]:
         """
         Run inference with only the stock tickers as the input and return the results without saving to the database.
@@ -166,8 +187,12 @@ class InferenceService:
             )
         )
         inference_results: list[InferenceResultSchema] = (
-            await self._make_run_inference_request_to_ml_server(inference_data)
+            await self._make_run_inference_request_to_ml_server(
+                inference_data,
+                days_forward=days_forward + 1,  # day 0 is the target date
+            )
         )
+        print(inference_results)
         return inference_results
 
     # DONE
@@ -214,11 +239,12 @@ class InferenceService:
             db=db, stock_tickers=stock_tickers
         )
 
+        last_date = target_date - timedelta(days=1)
         trading_data_list: list[TradingData] = (
             await self.trading_data_service.get_by_stock_tickers_and_date_range(
                 db=db,
                 stock_tickers=stock_tickers,
-                target_date=target_date,
+                last_date=last_date,
                 days_back=days_back,
             )
         )
@@ -246,7 +272,7 @@ class InferenceService:
             StockToPredictRequestSchema(
                 stock_ticker=model.stock_ticker,
                 trading_data_id=(
-                    trading_data_map[model.stock_ticker]["trading_data_id"][-2]
+                    trading_data_map[model.stock_ticker]["trading_data_id"][-1]
                     if len(trading_data_map[model.stock_ticker]["trading_data_id"]) > 1
                     else None
                 ),
@@ -275,24 +301,28 @@ class InferenceService:
 
     # DONE
     async def _make_run_inference_request_to_ml_server(
-        self, inference_data: list[StockToPredictRequestSchema]
+        self, inference_data: list[StockToPredictRequestSchema], days_forward: int = 16
     ) -> list[InferenceResultSchema]:
         """
         Make a request to the ML server to run inference.
         """
         validate_required(inference_data, "Inference data")
-        response = await self.ml.run_inference(stocks=inference_data)
+        response = await self.ml.run_inference(
+            stocks=inference_data, days_ahead=days_forward
+        )
         return response
 
     # DONE
     async def _save_success_inference_results(
         self,
         db: AsyncSession,
+        target_date: date,
         inference_data: list[StockToPredictRequestSchema],
         success_results: list[InferenceResultSchema],
         periods: list[int],
     ) -> list[Prediction] | None:
         predictions = self._prepare_prediction_rows(
+            target_date=target_date,
             inference_data=inference_data,
             success_results=success_results,
             periods=periods,
@@ -305,11 +335,11 @@ class InferenceService:
     # DONE
     @staticmethod
     def _prepare_prediction_rows(
+        target_date: date,
         inference_data: list[StockToPredictRequestSchema],
         success_results: list[InferenceResultSchema],
         periods: list[int],
     ) -> list[dict]:
-        # periods = [1, 5, 10, 15]
         predictions = []
         meta_lookup = {item.stock_ticker: item for item in inference_data}
 
@@ -324,7 +354,7 @@ class InferenceService:
                         {
                             "stock_ticker": res.stock_ticker,
                             "model_id": meta.model_id,
-                            "target_date": res.target_date,
+                            "target_date": target_date,
                             "period": period,
                             "predicted_price": res.predicted_price[period],
                             "closing_price": meta.close[-1],

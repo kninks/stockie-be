@@ -102,7 +102,7 @@ class DummyService:
         all_trading_data_all_stocks = (
             await self.trading_data_service.get_by_stock_tickers_and_date_range(
                 stock_tickers=stock_tickers,
-                target_date=target_date,
+                last_date=target_date,
                 days_back=days_back,
                 db=db,
             )
@@ -144,7 +144,6 @@ class DummyService:
 
             inference_result = InferenceResultSchema(
                 stock_ticker=ticker,
-                target_date=target_date,
                 predicted_price=predicted_prices,
                 success=True,
                 error_message=None,

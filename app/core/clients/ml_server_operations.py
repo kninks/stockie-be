@@ -25,11 +25,16 @@ class MLServerOperations:
             logger.error(f"{error_message}: {str(e)}")
             raise MLServerError(f"{error_message}: {str(e)}")
 
-    async def run_inference(self, stocks: list[StockToPredictRequestSchema]) -> Any:
-        payload = {"stocks": stocks}
+    async def run_inference(
+        self, stocks: list[StockToPredictRequestSchema], days_ahead: int
+    ) -> Any:
+        payload = {
+            "stocks": [stock.model_dump() for stock in stocks],
+            "days_ahead": days_ahead,
+        }
         return await self._make_request(
             self.client.post,
-            "/ml-models/predict",
+            "/predict",
             data=payload,
             error_message="Failed to trigger inference",
         )
