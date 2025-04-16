@@ -3,7 +3,6 @@ from typing import Any, Optional
 
 import httpx
 
-from app.core.enums.job_enum import JobStatusEnum, JobTypeEnum
 from app.core.settings.config import get_config
 
 logger = logging.getLogger(__name__)
@@ -65,34 +64,6 @@ class DiscordOperations:
         content = f"{alert}{prefix} {job_tag}{message}"
         payload = {"content": content}
         return await self.client.post(data=payload)
-
-    async def notify_discord_job_status(
-        self,
-        status: JobStatusEnum,
-        job_type: JobTypeEnum,
-        custom_message: Optional[str] = None,
-        is_critical: bool = False,
-        mention_everyone: bool = False,
-    ):
-        if status == JobStatusEnum.FAILED:
-            logger_func = logger.critical
-        elif status in {JobStatusEnum.SKIPPED, JobStatusEnum.WARNING}:
-            logger_func = logger.warning
-        else:
-            logger_func = logger.info
-
-        message = status.value
-        if custom_message:
-            message += f" — {custom_message}"
-
-        logger_func(f"[{job_type.value}] {message}")
-
-        await self.send_discord_message(
-            message=message,
-            job_name=job_type.value,
-            is_critical=is_critical,
-            mention_everyone=mention_everyone,
-        )
 
 
 def get_discord_operations() -> DiscordOperations:

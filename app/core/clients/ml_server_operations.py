@@ -1,9 +1,9 @@
 import logging
 from typing import Any, Awaitable, Callable
 
+from app.api.ml_ops.schemas.inference_schema import StockToPredictRequestSchema
 from app.core.clients.ml_server_client import MLServerClient
 from app.core.common.exceptions.custom_exceptions import MLServerError
-from app.modules.ml_ops.schemas.inference_schema import StockToPredictRequestSchema
 
 logger = logging.getLogger(__name__)
 
