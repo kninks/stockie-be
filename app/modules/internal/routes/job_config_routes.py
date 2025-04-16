@@ -61,7 +61,7 @@ async def invalidate_cache_route(
     return success_response()
 
 
-@router.delete("/invalidate-all-caches")
+@router.delete("/invalidate-cache/all")
 async def invalidate_all_caches_route(
     controller: JobConfigController = Depends(get_job_config_controller),
 ):
