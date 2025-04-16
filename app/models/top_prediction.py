@@ -11,6 +11,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.common.utils.datetime_utils import get_now_bangkok_datetime
 from app.models.base import Base
 
 
@@ -32,6 +33,6 @@ class TopPrediction(Base):
     period: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.now(),
+        default=get_now_bangkok_datetime(),
         server_default=func.now(),
     )

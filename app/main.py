@@ -1,6 +1,4 @@
 import logging
-
-# from contextlib import asynccontextmanager
 from typing import cast
 
 from fastapi import FastAPI, HTTPException
@@ -8,6 +6,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.types import ExceptionHandler
 
+from app.api.scheduler_jobs import scheduler_job_routes
 from app.core.common.exceptions.custom_exceptions import CustomAPIError
 from app.core.common.exceptions.exception_handlers import (
     custom_api_exception_handler,
@@ -17,7 +16,6 @@ from app.core.common.exceptions.exception_handlers import (
 )
 from app.core.common.middleware.logging_middleware import logging_middleware_factory
 from app.core.settings.logging_config import setup_logging
-from app.modules.scheduler_jobs import scheduler_job_routes
 
 # from app.core.common.middleware.role_auth_middleware import role_auth_middleware_factory
 
@@ -28,30 +26,15 @@ from app.core.settings.config import get_config
 
 config = get_config()
 
-from app.modules.dummy import dummy_routes
+from app.api.dummy import dummy_routes
 
 # from app.modules.general.routes import general_routes
-from app.modules.internal.routes import internal_routes
-from app.modules.ml_ops.routes import ml_ops_routes
-from app.modules.public.routes import public_routes
-
-# from app.schedulers.scheduler import register_all_jobs, start_scheduler
-
+from app.api.internal.routes import internal_routes
+from app.api.ml_ops.routes import ml_ops_routes
+from app.api.public.routes import public_routes
 
 logger = logging.getLogger(__name__)
 logger.setLevel(config.LOG_LEVEL)
-
-
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     logger.info("🔁 Lifespan startup...")
-#
-#     register_all_jobs()
-#     start_scheduler()
-#
-#     yield  # 🚀 app is now running
-#
-#     logger.info("🛑 Lifespan shutdown...")
 
 
 app = FastAPI(

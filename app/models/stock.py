@@ -11,6 +11,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.common.utils.datetime_utils import get_now_bangkok_datetime
 from app.models.base import Base
 
 
@@ -36,13 +37,13 @@ class Stock(Base):
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.now(),
+        default=get_now_bangkok_datetime(),
         server_default=func.now(),
     )
     modified_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.now(),
-        onupdate=datetime.now(),
+        default=get_now_bangkok_datetime(),
+        onupdate=get_now_bangkok_datetime(),
         server_default=func.now(),
     )
 
