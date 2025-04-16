@@ -1,5 +1,6 @@
 from datetime import date
 
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.ml_ops.schemas.inference_schema import (
@@ -47,6 +48,19 @@ class InferenceController:
         )
         return response
 
+    async def infer_only_all(
+        self,
+        request: TriggerAllInferenceRequestSchema,
+        db: AsyncSession,
+    ) -> list[InferenceResultSchema]:
+        response = await self.service.run_inference_all(
+            target_date=request.target_date,
+            days_back=request.days_back,
+            days_forward=request.days_forward,
+            db=db,
+        )
+        return jsonable_encoder(response)
+
     async def infer_only(
         self,
         request: TriggerInferenceRequestSchema,
@@ -56,9 +70,10 @@ class InferenceController:
             stock_tickers=request.stock_tickers,
             target_date=request.target_date,
             days_back=request.days_back,
+            days_forward=request.days_forward,
             db=db,
         )
-        return response
+        return jsonable_encoder(response)
 
     async def get_all_inference_data_controller(
         self,

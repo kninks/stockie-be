@@ -32,11 +32,11 @@ class TradingDataService:
         self,
         db: AsyncSession,
         stock_ticker: str,
-        target_date: date,
+        last_date: date,
         days_back: int,
     ) -> list[TradingData]:
         validate_required(stock_ticker, "stock ticker")
-        validate_required(target_date, "target date")
+        validate_required(last_date, "last date")
         validate_required(days_back, "days back")
         stock_ticker = normalize_stock_ticker(stock_ticker)
 
@@ -45,14 +45,14 @@ class TradingDataService:
                 await self.trading_data_repo.fetch_by_stock_ticker_and_date_range(
                     db=db,
                     stock_ticker=stock_ticker,
-                    target_date=target_date,
+                    last_date=last_date,
                     days_back=days_back,
                 )
             )
         except Exception as e:
             logger.error(
                 f"Failed to fetch trading data for ticker '{stock_ticker}', "
-                f"target date '{target_date}', days back '{days_back}': {e}"
+                f"last date '{last_date}', days back '{days_back}': {e}"
             )
             raise DBError("Failed to fetch trading data") from e
 
@@ -66,11 +66,11 @@ class TradingDataService:
         self,
         db: AsyncSession,
         stock_tickers: list[str],
-        target_date: date,
+        last_date: date,
         days_back: int,
     ) -> list[TradingData]:
         validate_required(stock_tickers, "stock tickers")
-        validate_required(target_date, "target date")
+        validate_required(last_date, "last date")
         validate_required(days_back, "days back")
         stock_tickers = normalize_stock_tickers(stock_tickers)
 
@@ -80,7 +80,7 @@ class TradingDataService:
                     await self.trading_data_repo.fetch_by_stock_ticker_and_date_range(
                         db=db,
                         stock_ticker=stock_tickers[0],
-                        target_date=target_date,
+                        last_date=last_date,
                         days_back=days_back,
                     )
                 )
@@ -89,19 +89,19 @@ class TradingDataService:
                     await self.trading_data_repo.fetch_by_stock_tickers_and_date_range(
                         db=db,
                         stock_tickers=stock_tickers,
-                        target_date=target_date,
+                        last_date=last_date,
                         days_back=days_back,
                     )
                 )
         except Exception as e:
             logger.error(
                 f"Failed to fetch trading data for tickers '{stock_tickers}', "
-                f"target date '{target_date}', days back '{days_back}': {e}"
+                f"last date '{last_date}', days back '{days_back}': {e}"
             )
             raise DBError("Failed to fetch trading data") from e
 
         validate_entity_exists(trading_data_list, "Trading data")
-        expected_total = len(stock_tickers) * (days_back + 1)
+        expected_total = len(stock_tickers) * days_back
         validate_exact_length(trading_data_list, expected_total, "trading data")
 
         return trading_data_list
@@ -110,11 +110,11 @@ class TradingDataService:
         self,
         db: AsyncSession,
         stock_ticker: str,
-        target_date: date,
+        last_date: date,
         days_back: int,
     ) -> list[float]:
         validate_required(stock_ticker, "stock ticker")
-        validate_required(target_date, "target date")
+        validate_required(last_date, "last date")
         validate_required(days_back, "days back")
         stock_tickers = normalize_stock_ticker(stock_ticker)
 
@@ -122,13 +122,13 @@ class TradingDataService:
             prices = await self.trading_data_repo.fetch_closing_price_values_by_stock_ticker_and_date_range(
                 db=db,
                 stock_ticker=stock_tickers[0],
-                target_date=target_date,
+                last_date=last_date,
                 days_back=days_back,
             )
         except Exception as e:
             logger.error(
                 f"Failed to fetch closing prices for ticker '{stock_ticker}', "
-                f"target date '{target_date}', days back '{days_back}': {e}"
+                f"last date '{last_date}', days back '{days_back}': {e}"
             )
             raise DBError("Failed to fetch closing prices") from e
 
@@ -141,11 +141,11 @@ class TradingDataService:
         self,
         db: AsyncSession,
         stock_tickers: list[str],
-        target_date: date,
+        last_date: date,
         days_back: int,
     ) -> dict[str, list[float]]:
         validate_required(stock_tickers, "stock tickers")
-        validate_required(target_date, "target date")
+        validate_required(last_date, "last date")
         validate_required(days_back, "days back")
         stock_tickers = normalize_stock_tickers(stock_tickers)
 
@@ -155,7 +155,7 @@ class TradingDataService:
                     await self.trading_data_repo.fetch_by_stock_ticker_and_date_range(
                         db=db,
                         stock_ticker=stock_tickers[0],
-                        target_date=target_date,
+                        last_date=last_date,
                         days_back=days_back,
                     )
                 )
@@ -164,19 +164,19 @@ class TradingDataService:
                     await self.trading_data_repo.fetch_by_stock_tickers_and_date_range(
                         db=db,
                         stock_tickers=stock_tickers,
-                        target_date=target_date,
+                        last_date=last_date,
                         days_back=days_back,
                     )
                 )
         except Exception as e:
             logger.error(
                 f"Failed to fetch trading data for tickers '{stock_tickers}', "
-                f"target date '{target_date}', days back '{days_back}': {e}"
+                f"last date '{last_date}', days back '{days_back}': {e}"
             )
             raise DBError("Failed to fetch trading data") from e
 
         validate_entity_exists(trading_data_list, "Trading data")
-        expected_total = len(stock_tickers) * (days_back + 1)
+        expected_total = len(stock_tickers) * days_back
         validate_exact_length(trading_data_list, expected_total, "trading data")
 
         grouped: dict[str, list[float]] = defaultdict()
@@ -226,6 +226,7 @@ class TradingDataService:
         logger.info(f"Inserted {len(trading_data_dict_list)} trading data.")
         return trading_data_list
 
+    # TODO : FIX
     async def delete_older_than(
         self,
         db: AsyncSession,

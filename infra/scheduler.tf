@@ -1,7 +1,7 @@
 resource "google_cloud_scheduler_job" "pull_trading_data" {
   name        = "pull-trading-data-job"
   description = "Trigger daily trading data pull"
-  schedule    = "0 19 * * *" # 7 PM every day
+  schedule    = "0 18 * * *" # 6 PM every day
   time_zone   = "Asia/Bangkok"
 
   http_target {
@@ -20,7 +20,7 @@ resource "google_cloud_scheduler_job" "pull_trading_data" {
 resource "google_cloud_scheduler_job" "infer_and_save" {
   name        = "infer-and-save-job"
   description = "Run and save inference predictions"
-  schedule    = "0 21 * * *" # 9 PM every day
+  schedule    = "0 20 * * *" # 8 PM every day
   time_zone   = "Asia/Bangkok"
 
   http_target {

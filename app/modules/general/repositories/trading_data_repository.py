@@ -1,9 +1,10 @@
 import logging
-from datetime import date, timedelta
+from datetime import date
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, over, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 from app.core.common.exceptions.custom_exceptions import DBError
 from app.core.common.utils.validators import sanitize_batch
@@ -27,67 +28,91 @@ class TradingDataRepository:
     async def fetch_by_stock_ticker_and_date_range(
         db: AsyncSession,
         stock_ticker: str,
-        target_date: date,
+        last_date: date,
         days_back: int,
     ) -> list[TradingData]:
-        start_date = target_date - timedelta(days=days_back)
-
         stmt = (
             select(TradingData)
             .where(
                 TradingData.stock_ticker == stock_ticker,
-                TradingData.target_date.between(start_date, target_date),
+                TradingData.target_date <= last_date,
             )
-            .order_by(TradingData.target_date.asc())
+            .order_by(TradingData.target_date.desc())
+            .limit(days_back)
         )
 
         result = await db.execute(stmt)
         trading_data_list: list[TradingData] = list(result.scalars().all())
-        return trading_data_list
+        return trading_data_list[::-1]
 
     @staticmethod
     async def fetch_by_stock_tickers_and_date_range(
         db: AsyncSession,
         stock_tickers: list[str],
-        target_date: date,
+        last_date: date,
         days_back: int,
     ) -> list[TradingData]:
-        start_date = target_date - timedelta(days=days_back)
+        SubTrading = aliased(TradingData)
+        subquery = (
+            select(
+                SubTrading.id,
+                over(
+                    func.row_number(),
+                    partition_by=SubTrading.stock_ticker,
+                    order_by=SubTrading.target_date.desc(),
+                ).label("rnum"),
+            )
+            .where(
+                SubTrading.stock_ticker.in_(stock_tickers),
+                SubTrading.target_date <= last_date,
+            )
+            .subquery()
+        )
 
         stmt = (
             select(TradingData)
-            .where(
-                TradingData.stock_ticker.in_(stock_tickers),
-                TradingData.target_date.between(start_date, target_date),
-            )
+            .join(subquery, TradingData.id == subquery.c.id)
+            .where(subquery.c.rnum <= days_back)
             .order_by(TradingData.stock_ticker, TradingData.target_date.asc())
         )
 
         result = await db.execute(stmt)
-        trading_data_list: list[TradingData] = list(result.scalars().all())
-        return trading_data_list
+        return list(result.scalars().all())
+
+        # stmt = (
+        #     select(TradingData)
+        #     .where(
+        #         TradingData.stock_ticker.in_(stock_tickers),
+        #         TradingData.target_date <= last_date,
+        #     )
+        #     .order_by(TradingData.stock_ticker, TradingData.target_date.desc())
+        #     .limit(days_back)
+        # )
+        #
+        # result = await db.execute(stmt)
+        # trading_data_list: list[TradingData] = list(result.scalars().all())
+        # return trading_data_list[::-1]
 
     @staticmethod
     async def fetch_closing_price_values_by_stock_ticker_and_date_range(
         db: AsyncSession,
         stock_ticker: str,
-        target_date: date,
+        last_date: date,
         days_back: int,
     ) -> list[float]:
-        start_date = target_date - timedelta(days=days_back)
-
         stmt = (
             select(TradingData.close)
             .where(
                 TradingData.stock_ticker == stock_ticker,
-                TradingData.target_date.between(start_date, target_date),
+                TradingData.target_date <= last_date,
             )
-            .order_by(TradingData.target_date.asc())
+            .order_by(TradingData.target_date.desc())
+            .limit(days_back)
         )
 
         result = await db.execute(stmt)
         closing_prices_list: list[float] = list(result.scalars().all())
-        return closing_prices_list
+        return closing_prices_list[::-1]
 
     @staticmethod
     async def create_one(db: AsyncSession, trading_data: dict) -> TradingData:

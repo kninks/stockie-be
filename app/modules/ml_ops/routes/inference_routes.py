@@ -47,6 +47,21 @@ async def trigger_infer_and_save_route(
 
 
 @router.post(
+    "/trigger-infer/all",
+    response_model=BaseSuccessResponse[list[InferenceResultSchema]],
+)
+async def trigger_infer_only_route_all(
+    request: TriggerAllInferenceRequestSchema,
+    controller: InferenceController = Depends(get_inference_controller),
+    db: AsyncSession = Depends(get_db),
+):
+    response: list[InferenceResultSchema] = await controller.infer_only_all(
+        request=request, db=db
+    )
+    return success_response(data=response)
+
+
+@router.post(
     "/trigger-infer", response_model=BaseSuccessResponse[list[InferenceResultSchema]]
 )
 async def trigger_infer_only_route(

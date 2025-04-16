@@ -31,11 +31,6 @@ class StockToPredictRequestSchema(BaseModel):
 
 class InferenceResultSchema(BaseModel):
     stock_ticker: str
-    target_date: date
     predicted_price: Optional[list[float]] = None
     success: bool
     error_message: Optional[str] = None
-
-
-# class SaveInferenceResultRequestSchema(BaseModel):
-#     inference_results: list[InferenceResultSchema]
