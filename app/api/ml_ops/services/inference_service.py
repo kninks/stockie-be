@@ -287,6 +287,9 @@ class InferenceService:
                 "trading_data_id": [],
                 TradingDataEnum.CLOSE: [],
                 TradingDataEnum.VOLUMES: [],
+                TradingDataEnum.HIGH: [],
+                TradingDataEnum.LOW: [],
+                TradingDataEnum.OPEN: [],
             }
         )
         for trading_data in trading_data_list:
@@ -300,6 +303,15 @@ class InferenceService:
             )
             trading_data_map[trading_data.stock_ticker][TradingDataEnum.VOLUMES].append(
                 trading_data.volumes
+            )
+            trading_data_map[trading_data.stock_ticker][TradingDataEnum.HIGH].append(
+                trading_data.high
+            )
+            trading_data_map[trading_data.stock_ticker][TradingDataEnum.LOW].append(
+                trading_data.low
+            )
+            trading_data_map[trading_data.stock_ticker][TradingDataEnum.OPEN].append(
+                trading_data.open
             )
 
         inference_data = [
@@ -322,6 +334,27 @@ class InferenceService:
                         :days_back
                     ]
                     if TradingDataEnum.VOLUMES in model.features_used
+                    else []
+                ),
+                high=(
+                    trading_data_map[model.stock_ticker][TradingDataEnum.HIGH][
+                        :days_back
+                    ]
+                    if TradingDataEnum.HIGH in model.features_used
+                    else []
+                ),
+                low=(
+                    trading_data_map[model.stock_ticker][TradingDataEnum.LOW][
+                        :days_back
+                    ]
+                    if TradingDataEnum.LOW in model.features_used
+                    else []
+                ),
+                open=(
+                    trading_data_map[model.stock_ticker][TradingDataEnum.OPEN][
+                        :days_back
+                    ]
+                    if TradingDataEnum.OPEN in model.features_used
                     else []
                 ),
                 model_id=model.id,

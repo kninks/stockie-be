@@ -27,6 +27,9 @@ class StockToPredictRequestSchema(BaseModel):
     trading_data_id: Optional[int] = None
     close: list[float]
     volumes: Optional[list[int]] = []
+    high: Optional[list[float]] = []
+    low: Optional[list[float]] = []
+    open: Optional[list[float]] = []
     model_id: int
     model_path: str
     scaler_path: str
