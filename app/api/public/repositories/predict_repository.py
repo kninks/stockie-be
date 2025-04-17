@@ -1,5 +1,5 @@
+import logging
 from datetime import date
-from typing import List
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +9,8 @@ from app.api.public.schema.predict_schema import (
 )
 from app.core.enums.industry_code_enum import IndustryCodeEnum
 from app.models import Prediction, TopPrediction
+
+logger = logging.getLogger(__name__)
 
 
 class PredictRepository:
@@ -20,7 +22,7 @@ class PredictRepository:
         industry_code: IndustryCodeEnum,
         period: int,
         target_date: date,
-    ) -> List[TopPredictionRankSchema]:
+    ) -> list[TopPredictionRankSchema]:
         stmt = (
             select(
                 Prediction.rank,
@@ -41,6 +43,7 @@ class PredictRepository:
 
         result = await db.execute(stmt)
         top_prediction_rows = result.fetchall()
+        logger.critical(f"top_prediction_rows: {top_prediction_rows}")
 
         top_prediction = [
             TopPredictionRankSchema(

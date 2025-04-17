@@ -46,11 +46,12 @@ class PredictService:
         self, industry: IndustryCodeEnum, period: int, db: AsyncSession
     ) -> GetTopPredictionResponseSchema:
         # target_date: date = get_today_bangkok_date()
-        target_date = date(2025, 4, 10)  # temporary
+        target_date = date(2025, 4, 18)  # temporary
+
         try:
             top_prediction = await self.predict_repo.fetch_top_prediction(
                 db=db,
-                industry_code=IndustryCodeEnum(industry),
+                industry_code=industry,
                 period=period,
                 target_date=target_date,
             )

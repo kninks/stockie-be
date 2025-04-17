@@ -291,14 +291,36 @@ class SchedulerJobService:
         tomorrow = get_today_bangkok_date() + timedelta(days=1)
 
         try:
+            failed_tasks = []
+
             for i in industry_codes:
                 for p in periods:
-                    await self.process_data_service.rank_and_save_top_prediction(
-                        db=db,
-                        industry_code=i,
-                        period=p,
-                        target_date=tomorrow,
-                    )
+                    try:
+                        await self.process_data_service.rank_and_save_top_prediction(
+                            db=db,
+                            industry_code=i,
+                            period=p,
+                            target_date=tomorrow,
+                        )
+                    except Exception as task_error:
+                        failed_tasks.append((i.value, p, str(task_error)))
+
+            if failed_tasks:
+                error_msg = "\n".join(
+                    [
+                        f"Industry: {i}, Period: {p}, Error: {msg}"
+                        for i, p, msg in failed_tasks
+                    ]
+                )
+                await self._handle_job_executed(
+                    db=db,
+                    job_type=JobTypeEnum.RANK,
+                    job_status=JobStatusEnum.FAILED,
+                    additional_message=f"Some rankings failed:\n{error_msg}",
+                    is_critical=True,
+                    mention_everyone=True,
+                )
+                raise Exception("Ranking job failed for some industries/periods.")
 
             await self._handle_job_executed(
                 db=db,
