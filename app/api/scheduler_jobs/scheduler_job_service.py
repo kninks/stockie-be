@@ -27,7 +27,10 @@ from app.api.ml_ops.services.inference_service import (
     get_inference_service,
 )
 from app.core.clients.discord_client import DiscordOperations, get_discord_operations
-from app.core.common.utils.datetime_utils import get_today_bangkok_date
+from app.core.common.utils.datetime_utils import (
+    get_today_bangkok_date,
+    is_market_closed,
+)
 from app.core.enums.industry_code_enum import IndustryCodeEnum
 from app.core.enums.job_enum import JobConfigEnum, JobStatusEnum, JobTypeEnum
 
@@ -125,6 +128,18 @@ class SchedulerJobService:
 
         all_stocks = await self.stock_service.get_active_ticker_values(db=db)
         today = get_today_bangkok_date()
+
+        if is_market_closed(today):
+            await self._handle_job_executed(
+                db=db,
+                job_type=JobTypeEnum.PULL_TRADING_DATA,
+                job_status=JobStatusEnum.SKIPPED,
+                additional_message="Skip reason: market close date.",
+                is_critical=False,
+                mention_everyone=False,
+                tags=["pull"],
+            )
+            return
 
         try:
             failed_trading_data = await self.process_data_service.pull_trading_data(
