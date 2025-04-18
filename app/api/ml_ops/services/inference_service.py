@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import date
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -117,16 +117,6 @@ class InferenceService:
             )
         )
 
-        # inference_results: list[InferenceResultSchema] = (
-        #     await self.dummy_service.generate_dummy_inference_results(
-        #         db=db,
-        #         stock_tickers=stock_tickers,
-        #         target_date=target_date,
-        #         days_back=days_back,
-        #         days_forward=days_forward,
-        #     )
-        # )
-
         success_results = [i for i in inference_results if i.success]
         failed_results = [i for i in inference_results if not i.success]
         if failed_results:
@@ -201,7 +191,6 @@ class InferenceService:
                 days_forward=days_forward,
             )
         )
-        print(inference_results)
         return inference_results
 
     # DONE: Only for admin
@@ -273,12 +262,11 @@ class InferenceService:
             db=db, stock_tickers=stock_tickers
         )
 
-        last_date = target_date - timedelta(days=1)
         trading_data_list: list[TradingData] = (
             await self.trading_data_service.get_by_stock_tickers_and_date_range(
                 db=db,
                 stock_tickers=stock_tickers,
-                last_date=last_date,
+                last_date=target_date,
                 days_back=days_back,
             )
         )

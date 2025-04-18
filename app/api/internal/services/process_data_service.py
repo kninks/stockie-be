@@ -88,7 +88,6 @@ class ProcessDataService:
         )
 
         ranked_predictions = self.rank_predictions(predictions)
-        print(ranked_predictions)
 
         try:
             await self.process_data_repository.create_top_prediction_and_update_ranks(
@@ -191,16 +190,6 @@ class ProcessDataService:
             ),
         }
         return response
-
-    @staticmethod
-    def _get_weekends(year: int) -> set[date]:
-        weekends = set()
-        current = date(year, 1, 1)
-        while current.year == year:
-            if current.weekday() in {5, 6}:
-                weekends.add(current)
-            current += timedelta(days=1)
-        return weekends
 
 
 def get_process_data_service() -> ProcessDataService:

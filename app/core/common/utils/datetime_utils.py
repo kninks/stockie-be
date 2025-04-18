@@ -28,6 +28,14 @@ def get_today_bangkok_date() -> datetime.date:
     return datetime.now(ZoneInfo("Asia/Bangkok")).date()
 
 
+def get_yesterday_bangkok_date() -> datetime.date:
+    return datetime.now(ZoneInfo("Asia/Bangkok")).date() - timedelta(days=1)
+
+
+def get_tomorrow_bangkok_date() -> datetime.date:
+    return datetime.now(ZoneInfo("Asia/Bangkok")).date() - timedelta(days=1)
+
+
 def get_now_bangkok_datetime() -> datetime:
     return datetime.now(ZoneInfo("Asia/Bangkok"))
 

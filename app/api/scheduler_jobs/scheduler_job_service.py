@@ -1,6 +1,5 @@
 import logging
 from asyncio import gather
-from datetime import timedelta
 from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -126,7 +125,6 @@ class SchedulerJobService:
             )
             return
 
-        all_stocks = await self.stock_service.get_active_ticker_values(db=db)
         today = get_today_bangkok_date()
 
         if is_market_closed(today):
@@ -140,6 +138,8 @@ class SchedulerJobService:
                 tags=["pull"],
             )
             return
+
+        all_stocks = await self.stock_service.get_active_ticker_values(db=db)
 
         try:
             failed_trading_data = await self.process_data_service.pull_trading_data(
@@ -207,7 +207,7 @@ class SchedulerJobService:
             )
             return None
 
-        tomorrow = get_today_bangkok_date() + timedelta(days=1)
+        today = get_today_bangkok_date()
         all_industry_codes = [item for item in IndustryCodeEnum]
 
         try:
@@ -215,7 +215,7 @@ class SchedulerJobService:
                 self.inference_service.run_and_save_inference_by_industry_code(
                     db=db,
                     industry_code=industry_code,
-                    target_date=tomorrow,
+                    target_date=today,
                     days_back=days_back,
                     days_forward=days_forward,
                     periods=periods,
@@ -303,7 +303,7 @@ class SchedulerJobService:
             return
 
         industry_codes = [item for item in IndustryCodeEnum]
-        tomorrow = get_today_bangkok_date() + timedelta(days=1)
+        today = get_today_bangkok_date()
 
         try:
             failed_tasks = []
@@ -315,7 +315,7 @@ class SchedulerJobService:
                             db=db,
                             industry_code=i,
                             period=p,
-                            target_date=tomorrow,
+                            target_date=today,
                         )
                     except Exception as task_error:
                         failed_tasks.append((i.value, p, str(task_error)))

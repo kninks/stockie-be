@@ -25,7 +25,7 @@ from app.core.common.exceptions.custom_exceptions import DBError, ResourceNotFou
 from app.core.common.utils.datetime_utils import (
     get_last_market_open_date,
     get_n_market_days_ahead,
-    get_today_bangkok_date,
+    get_yesterday_bangkok_date,
     is_market_closed,
 )
 from app.core.common.utils.validators import validate_required
@@ -50,14 +50,14 @@ class PredictService:
     async def get_top_prediction(
         self, industry: IndustryCodeEnum, period: int, db: AsyncSession
     ) -> GetTopPredictionResponseSchema:
-        today: date = get_today_bangkok_date()
-        # today = date(2025, 4, 18)  # temporary
-
+        yesterday: date = get_yesterday_bangkok_date()
         validate_required(industry, "industry")
         validate_required(period, "period")
 
         closing_price_date = (
-            get_last_market_open_date(today) if is_market_closed(today) else today
+            get_last_market_open_date(yesterday)
+            if is_market_closed(yesterday)
+            else yesterday
         )
         predicted_price_date = get_n_market_days_ahead(
             start_date=closing_price_date, n=period
