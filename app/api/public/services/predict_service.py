@@ -22,8 +22,13 @@ from app.api.public.schema.predict_schema import (
     GetTopPredictionResponseSchema,
 )
 from app.core.common.exceptions.custom_exceptions import DBError, ResourceNotFoundError
-
-# from app.core.common.utils.datetime_utils import get_today_bangkok_date
+from app.core.common.utils.datetime_utils import (
+    get_last_market_open_date,
+    get_n_market_days_ahead,
+    get_today_bangkok_date,
+    is_market_closed,
+)
+from app.core.common.utils.validators import validate_required
 from app.core.enums.industry_code_enum import IndustryCodeEnum
 
 logger = logging.getLogger(__name__)
@@ -45,22 +50,37 @@ class PredictService:
     async def get_top_prediction(
         self, industry: IndustryCodeEnum, period: int, db: AsyncSession
     ) -> GetTopPredictionResponseSchema:
-        # target_date: date = get_today_bangkok_date()
-        target_date = date(2025, 4, 18)  # temporary
+        today: date = get_today_bangkok_date()
+        # today = date(2025, 4, 18)  # temporary
+
+        validate_required(industry, "industry")
+        validate_required(period, "period")
+
+        closing_price_date = (
+            get_last_market_open_date(today) if is_market_closed(today) else today
+        )
+        predicted_price_date = get_n_market_days_ahead(
+            start_date=closing_price_date, n=period
+        )
 
         try:
             top_prediction = await self.predict_repo.fetch_top_prediction(
                 db=db,
                 industry_code=industry,
                 period=period,
-                target_date=target_date,
+                target_date=closing_price_date,
             )
 
             if not top_prediction:
                 logger.error("No top prediction found.")
                 raise ResourceNotFoundError("No top prediction found.")
 
-            return GetTopPredictionResponseSchema(ranked_predictions=top_prediction)
+            return GetTopPredictionResponseSchema(
+                ranked_predictions=top_prediction,
+                closing_price_date=closing_price_date,
+                predicted_price_date=predicted_price_date,
+            )
+
         except Exception as e:
             logger.error(f"Failed to get top prediction from database: {e}")
             raise DBError("Failed to get top prediction from database") from e

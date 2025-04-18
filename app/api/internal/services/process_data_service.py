@@ -21,6 +21,12 @@ from app.api.internal.repositories.process_data_repository import (
     ProcessDataRepository,
 )
 from app.core.common.exceptions.custom_exceptions import DBError
+from app.core.common.utils.datetime_utils import (
+    get_last_market_open_date,
+    get_n_market_days_ahead,
+    get_next_market_open_date,
+    is_market_closed,
+)
 from app.core.common.utils.validators import validate_required
 from app.core.enums.industry_code_enum import IndustryCodeEnum
 from app.models import Prediction
@@ -162,6 +168,39 @@ class ProcessDataService:
         except Exception as e:
             logger.error(f"Failed to pull trading data: {e}")
             raise DBError("Failed to pull trading data") from e
+
+    @staticmethod
+    def get_market_close_date(
+        target_date: date,
+        n_days: int = None,
+    ) -> dict[str, bool | date]:
+        validate_required(target_date, "target date")
+        response = {
+            "target_date": target_date,
+            "market_open": not is_market_closed(target_date),
+            "next_market_open_date": get_next_market_open_date(target_date),
+            "last_market_open_date": (
+                get_last_market_open_date(target_date)
+                if is_market_closed(target_date)
+                else None
+            ),
+            "next_n_market_date": (
+                get_n_market_days_ahead(start_date=target_date, n=n_days)
+                if n_days
+                else None
+            ),
+        }
+        return response
+
+    @staticmethod
+    def _get_weekends(year: int) -> set[date]:
+        weekends = set()
+        current = date(year, 1, 1)
+        while current.year == year:
+            if current.weekday() in {5, 6}:
+                weekends.add(current)
+            current += timedelta(days=1)
+        return weekends
 
 
 def get_process_data_service() -> ProcessDataService:

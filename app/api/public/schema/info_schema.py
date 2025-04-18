@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel
 
 from app.core.enums.industry_code_enum import IndustryCodeEnum
@@ -21,9 +19,9 @@ class IndustryResponseSchema(BaseModel):
     industry_name_th: str
     industry_description_en: str
     industry_description_th: str
-    stocks_info: List[StockInfoSchema]
+    stocks_info: list[StockInfoSchema]
 
 
 class InitialInfoResponseSchema(BaseModel):
-    all_periods: List[PeriodResponseSchema]
-    all_industries: List[IndustryResponseSchema]
+    all_periods: list[PeriodResponseSchema]
+    all_industries: list[IndustryResponseSchema]

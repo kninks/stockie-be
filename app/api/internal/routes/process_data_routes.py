@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends
+from datetime import date
+from typing import Optional
+
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.internal.controllers.process_data_controller import (
@@ -9,6 +12,7 @@ from app.api.internal.schemas.process_data_schema import (
     PullTradingDataRequestSchema,
     RankPredictionsRequestSchema,
 )
+from app.core.common.utils.datetime_utils import get_today_bangkok_date
 from app.core.common.utils.response_handlers import (
     success_response,
 )
@@ -59,4 +63,16 @@ async def pull_trading_data_route(
     db: AsyncSession = Depends(get_db),
 ):
     response = await controller.pull_trading_data_controller(request=request, db=db)
+    return success_response(data=response)
+
+
+@router.get("/market-close-date")
+def market_close_date_route(
+    target_date: date = Query(get_today_bangkok_date()),
+    next_n_market_days: Optional[int] = Query(default=None),
+    controller: ProcessDataController = Depends(get_process_data_controller),
+):
+    response: dict[str, bool | date] = controller.get_market_close_date_controller(
+        target_date=target_date, next_n_market_days=next_n_market_days
+    )
     return success_response(data=response)

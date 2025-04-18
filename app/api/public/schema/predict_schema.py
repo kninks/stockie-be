@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic import BaseModel
 
 
@@ -9,4 +11,6 @@ class TopPredictionRankSchema(BaseModel):
 
 
 class GetTopPredictionResponseSchema(BaseModel):
+    closing_price_date: date
+    predicted_price_date: date
     ranked_predictions: list[TopPredictionRankSchema]

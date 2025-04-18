@@ -1,4 +1,5 @@
 from fastapi import Depends
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.public.schema.predict_schema import (
@@ -24,7 +25,7 @@ class PredictController:
         response = await self.service.get_top_prediction(
             industry=industry, period=period, db=db
         )
-        return response
+        return jsonable_encoder(response)
 
 
 def get_predict_controller() -> PredictController:
