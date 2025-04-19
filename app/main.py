@@ -26,8 +26,7 @@ from app.core.settings.config import get_config
 
 config = get_config()
 
-from app.api.dummy import dummy_routes
-
+# from app.api.dummy import dummy_routes
 # from app.modules.general.routes import general_routes
 from app.api.internal.routes import internal_routes
 from app.api.ml_ops.routes import ml_ops_routes
@@ -71,10 +70,10 @@ app.include_router(scheduler_job_routes.router)
 app.include_router(internal_routes.router)
 app.include_router(ml_ops_routes.router)
 # app.include_router(general_routes.router)
-app.include_router(dummy_routes.router)
+# app.include_router(dummy_routes.router)
 
 
-@app.get("/", tags=["General"])
+@app.get("/", tags=["Welcome"])
 def home():
     logger.info("Home endpoint called!")
     return {

@@ -28,11 +28,13 @@ router = APIRouter(
 
 @router.post("/rank-predictions/all")
 async def rank_predictions_all_route(
-    request: RankPredictionsRequestSchema,
+    target_date: date = Query(default=get_today_bangkok_date()),
     controller: ProcessDataController = Depends(get_process_data_controller),
     db: AsyncSession = Depends(get_db),
 ):
-    await controller.rank_predictions_controller(request=request, db=db)
+    await controller.rank_and_save_top_predictions_all_controller(
+        target_date=target_date, db=db
+    )
     return success_response()
 
 
@@ -42,18 +44,10 @@ async def rank_predictions_route(
     controller: ProcessDataController = Depends(get_process_data_controller),
     db: AsyncSession = Depends(get_db),
 ):
-    await controller.rank_predictions_controller(request=request, db=db)
-    return success_response()
-
-
-@router.post("/pull-trading-data/all")
-async def pull_trading_data_all_route(
-    request: PullTradingDataRequestSchema,
-    controller: ProcessDataController = Depends(get_process_data_controller),
-    db: AsyncSession = Depends(get_db),
-):
-    await controller.pull_trading_data_controller(request=request, db=db)
-    return success_response()
+    response = await controller.rank_and_save_top_predictions_controller(
+        request=request, db=db
+    )
+    return success_response(data=response)
 
 
 @router.post("/pull-trading-data")
@@ -66,13 +60,40 @@ async def pull_trading_data_route(
     return success_response(data=response)
 
 
-@router.get("/market-close-date")
-def market_close_date_route(
+@router.get("/evaluate-accuracy/all")
+async def accuracy_all_route(
+    target_date: date = Query(default=get_today_bangkok_date()),
+    days_back: int = Query(default=15),
+    controller: ProcessDataController = Depends(get_process_data_controller),
+    db: AsyncSession = Depends(get_db),
+):
+    response = await controller.accuracy_all_controller(
+        target_date=target_date, days_back=days_back, db=db
+    )
+    return success_response(data=response)
+
+
+@router.get("/evaluate-accuracy")
+async def accuracy_route(
+    stock_tickers: list[str] = Query(...),
+    target_date: date = Query(default=get_today_bangkok_date()),
+    days_back: int = Query(default=15),
+    controller: ProcessDataController = Depends(get_process_data_controller),
+    db: AsyncSession = Depends(get_db),
+):
+    response = await controller.accuracy_controller(
+        stock_tickers=stock_tickers, target_date=target_date, days_back=days_back, db=db
+    )
+    return success_response(data=response)
+
+
+@router.get("/market-open-date")
+def market_open_date_route(
     target_date: date = Query(get_today_bangkok_date()),
     next_n_market_days: Optional[int] = Query(default=None),
     controller: ProcessDataController = Depends(get_process_data_controller),
 ):
-    response: dict[str, bool | date] = controller.get_market_close_date_controller(
+    response: dict[str, bool | date] = controller.get_market_open_date_controller(
         target_date=target_date, next_n_market_days=next_n_market_days
     )
     return success_response(data=response)

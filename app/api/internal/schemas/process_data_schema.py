@@ -6,11 +6,11 @@ from app.core.enums.industry_code_enum import IndustryCodeEnum
 
 
 class RankPredictionsRequestSchema(BaseModel):
-    industry: IndustryCodeEnum
-    period: int
-    target_date: date
+    industries: list[IndustryCodeEnum]
+    periods: list[int]
+    target_dates: list[date]
 
 
 class PullTradingDataRequestSchema(BaseModel):
     stock_tickers: list[str]
-    target_date: date
+    target_dates: date

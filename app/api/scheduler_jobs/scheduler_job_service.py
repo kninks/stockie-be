@@ -17,10 +17,6 @@ from app.api.internal.services.process_data_service import (
     ProcessDataService,
     get_process_data_service,
 )
-from app.api.ml_ops.services.evaluation_service import (
-    EvaluationService,
-    get_evaluation_service,
-)
 from app.api.ml_ops.services.inference_service import (
     InferenceService,
     get_inference_service,
@@ -43,7 +39,6 @@ class SchedulerJobService:
         discord_operations: DiscordOperations,
         process_data_service: ProcessDataService,
         inference_service: InferenceService,
-        evaluate_service: EvaluationService,
         cleanup_data_service: CleanupDataService,
         stock_service: StockService,
     ):
@@ -51,7 +46,6 @@ class SchedulerJobService:
         self.discord = discord_operations
         self.process_data_service = process_data_service
         self.inference_service = inference_service
-        self.evaluate_service = evaluate_service
         self.cleanup_data_service = cleanup_data_service
         self.stock_service = stock_service
 
@@ -306,25 +300,19 @@ class SchedulerJobService:
         today = get_today_bangkok_date()
 
         try:
-            failed_tasks = []
+            result = await self.process_data_service.rank_and_save_top_predictions(
+                db=db,
+                industry_codes=industry_codes,
+                periods=periods,
+                target_dates=[today],
+            )
 
-            for i in industry_codes:
-                for p in periods:
-                    try:
-                        await self.process_data_service.rank_and_save_top_prediction(
-                            db=db,
-                            industry_code=i,
-                            period=p,
-                            target_date=today,
-                        )
-                    except Exception as task_error:
-                        failed_tasks.append((i.value, p, str(task_error)))
-
-            if failed_tasks:
+            failed_tasks = result["failed"]
+            if len(failed_tasks) != 0:
                 error_msg = "\n".join(
                     [
-                        f"Industry: {i}, Period: {p}, Error: {msg}"
-                        for i, p, msg in failed_tasks
+                        f"Industry: {i}, Period: {p}, Date: {d}"
+                        for i, p, d, msg in failed_tasks
                     ]
                 )
                 await self._handle_job_executed(
@@ -380,7 +368,7 @@ class SchedulerJobService:
         today = get_today_bangkok_date()
 
         try:
-            await self.evaluate_service.accuracy(
+            await self.process_data_service.accuracy(
                 db=db,
                 target_date=today,
                 days_back=days_back,
@@ -468,7 +456,6 @@ def get_scheduler_job_service() -> SchedulerJobService:
         discord_operations=get_discord_operations(),
         process_data_service=get_process_data_service(),
         inference_service=get_inference_service(),
-        evaluate_service=get_evaluation_service(),
         cleanup_data_service=get_cleanup_data_service(),
         stock_service=get_stock_service(),
     )

@@ -66,6 +66,12 @@ class InferenceService:
         days_forward: int,
         periods: list[int],
     ) -> list[Prediction] | None:
+        validate_required(industry_code, "Industry Code")
+        validate_required(target_date, "Target Date")
+        validate_required(days_back, "Days back")
+        validate_required(days_forward, "Days forward")
+        validate_required(periods, "Periods")
+
         stock_tickers = await self.stock_service.get_by_industry_code(
             db=db, industry_code=industry_code
         )
@@ -80,11 +86,7 @@ class InferenceService:
         )
         return saved_predictions
 
-    # FIXME:
-    #  add error handling
-    #  improve performance
-    #  connect w/ ML server
-    #  notify on failed stocks : Done
+    # DONE
     async def run_and_save_inference_by_stock_tickers(
         self,
         db: AsyncSession,
@@ -94,9 +96,6 @@ class InferenceService:
         days_forward: int,
         periods: list[int],
     ) -> list[Prediction] | None:
-        """
-        Run inference with only the stock tickers as the input and save the results to the database.
-        """
         validate_required(stock_tickers, "Stock tickers")
         validate_required(target_date, "Target date")
         validate_required(days_back, "Days back")
@@ -142,7 +141,7 @@ class InferenceService:
 
         return saved_predictions
 
-    async def run_inference_by_industry(
+    async def run_inference_by_industy_code(
         self,
         db: AsyncSession,
         industry_code: IndustryCodeEnum,
@@ -173,10 +172,6 @@ class InferenceService:
         days_back: int,
         days_forward: int = 15,
     ) -> list[InferenceResultSchema]:
-        """
-        Run inference with only the stock tickers as the input and return the results without saving to the database.
-        This is just for debugging purpose.
-        """
         inference_data: list[StockToPredictRequestSchema] = (
             await self.get_inference_data_by_stock_tickers(
                 stock_tickers=stock_tickers,
@@ -192,31 +187,6 @@ class InferenceService:
             )
         )
         return inference_results
-
-    # DONE: Only for admin
-    async def get_all_inference_data(
-        self,
-        db: AsyncSession,
-        target_date: date,
-        days_back: int,
-    ) -> list[StockToPredictRequestSchema]:
-        """
-        Get the inference data by stock tickers.
-        """
-        validate_required(target_date, "Target date")
-        validate_required(days_back, "Days back")
-
-        active_stocks: list[str] = await self.stock_service.get_active_ticker_values(
-            db=db
-        )
-        inference_data = await self.get_inference_data_by_stock_tickers(
-            db=db,
-            stock_tickers=active_stocks,
-            target_date=target_date,
-            days_back=days_back,
-        )
-
-        return inference_data
 
     # DONE: Only for admin
     async def get_inference_data_by_industry_code(

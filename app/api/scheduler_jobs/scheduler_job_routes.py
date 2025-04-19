@@ -33,7 +33,7 @@ async def scheduled_infer_and_save_route(
 
 
 @router.post("/rank-predictions")
-async def scheduled_rank_predictions_all_route(
+async def scheduled_rank_predictions_route(
     controller: SchedulerJobController = Depends(get_scheduler_job_controller),
     db: AsyncSession = Depends(get_db),
 ):
@@ -41,7 +41,7 @@ async def scheduled_rank_predictions_all_route(
     return success_response()
 
 
-@router.post("/evaluate-accuracy")
+@router.get("/evaluate-accuracy")
 async def scheduled_evaluate_accuracy_route(
     controller: SchedulerJobController = Depends(get_scheduler_job_controller),
     db: AsyncSession = Depends(get_db),

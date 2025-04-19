@@ -8,10 +8,10 @@ from app.api.general.services.stock_model_service import (
     get_stock_model_service,
 )
 from app.api.general.services.stock_service import StockService, get_stock_service
-from app.api.ml_ops.repositories.metadata_repository import (
+from app.api.internal.repositories.metadata_repository import (
     MetadataRepository,
 )
-from app.api.ml_ops.schemas.metadata_schema import (
+from app.api.internal.schemas.metadata_schema import (
     ModelMetadataResponseSchema,
 )
 from app.core.common.utils.validators import (

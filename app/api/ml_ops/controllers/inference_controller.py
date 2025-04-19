@@ -20,7 +20,7 @@ class InferenceController:
     def __init__(self, service: InferenceService):
         self.service = service
 
-    async def infer_and_save_by_industry(
+    async def infer_and_save_industry_controller(
         self,
         request: TriggerAllInferenceRequestSchema,
         db: AsyncSession,
@@ -50,12 +50,12 @@ class InferenceController:
         )
         return response
 
-    async def infer_only_by_industry(
+    async def infer_only_industry_controller(
         self,
         request: TriggerAllInferenceRequestSchema,
         db: AsyncSession,
     ) -> list[InferenceResultSchema]:
-        response = await self.service.run_inference_by_industry(
+        response = await self.service.run_inference_by_industy_code(
             industry_code=request.industry,
             target_date=request.target_date,
             days_back=request.days_back,
@@ -64,7 +64,7 @@ class InferenceController:
         )
         return jsonable_encoder(response)
 
-    async def infer_only(
+    async def infer_only_controller(
         self,
         request: TriggerInferenceRequestSchema,
         db: AsyncSession,
@@ -78,20 +78,7 @@ class InferenceController:
         )
         return jsonable_encoder(response)
 
-    async def get_all_inference_data_controller(
-        self,
-        target_date: date,
-        days_back: int,
-        db: AsyncSession,
-    ) -> list[StockToPredictRequestSchema]:
-        response = await self.service.get_all_inference_data(
-            target_date=target_date,
-            days_back=days_back,
-            db=db,
-        )
-        return response
-
-    async def get_inference_data_by_industry_controller(
+    async def get_inference_data_industry_controller(
         self,
         industry: IndustryCodeEnum,
         target_date: date,
