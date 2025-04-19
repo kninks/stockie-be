@@ -1,5 +1,4 @@
 from datetime import date
-from typing import List
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +13,7 @@ from app.api.ml_ops.schemas.inference_schema import (
     TriggerAllInferenceRequestSchema,
     TriggerInferenceRequestSchema,
 )
+from app.core.common.utils.datetime_utils import get_today_bangkok_date
 from app.core.common.utils.response_handlers import (
     BaseSuccessResponse,
     success_response,
@@ -22,22 +22,22 @@ from app.core.dependencies.db_session import get_db
 from app.core.enums.industry_code_enum import IndustryCodeEnum
 
 router = APIRouter(
-    prefix="/inference",
+    # prefix="/inference",
     tags=["[ml-ops] Inference"],
 )
 
 
 @router.post("/trigger-infer-and-save/industry")
-async def trigger_infer_and_save_all_route(
+async def trigger_infer_and_save_industry_route(
     request: TriggerAllInferenceRequestSchema,
     controller: InferenceController = Depends(get_inference_controller),
     db: AsyncSession = Depends(get_db),
 ):
-    await controller.infer_and_save_by_industry(request=request, db=db)
+    await controller.infer_and_save_industry_controller(request=request, db=db)
     return success_response(data=None)
 
 
-@router.post("/trigger-infer-and-save/tickers")
+@router.post("/trigger-infer-and-save/stocks")
 async def trigger_infer_and_save_route(
     request: TriggerInferenceRequestSchema,
     controller: InferenceController = Depends(get_inference_controller),
@@ -51,19 +51,19 @@ async def trigger_infer_and_save_route(
     "/trigger-infer/industry",
     response_model=BaseSuccessResponse[list[InferenceResultSchema]],
 )
-async def trigger_infer_only_route_all(
+async def trigger_infer_only_industry_route(
     request: TriggerAllInferenceRequestSchema,
     controller: InferenceController = Depends(get_inference_controller),
     db: AsyncSession = Depends(get_db),
 ):
-    response: list[InferenceResultSchema] = await controller.infer_only_by_industry(
-        request=request, db=db
+    response: list[InferenceResultSchema] = (
+        await controller.infer_only_industry_controller(request=request, db=db)
     )
     return success_response(data=response)
 
 
 @router.post(
-    "/trigger-infer/tickers",
+    "/trigger-infer/stocks",
     response_model=BaseSuccessResponse[list[InferenceResultSchema]],
 )
 async def trigger_infer_only_route(
@@ -71,28 +71,8 @@ async def trigger_infer_only_route(
     controller: InferenceController = Depends(get_inference_controller),
     db: AsyncSession = Depends(get_db),
 ):
-    response: list[InferenceResultSchema] = await controller.infer_only(
+    response: list[InferenceResultSchema] = await controller.infer_only_controller(
         request=request, db=db
-    )
-    return success_response(data=response)
-
-
-@router.get(
-    "/inference_data/all",
-    response_model=BaseSuccessResponse[list[StockToPredictRequestSchema]],
-)
-async def get_all_inference_data_route(
-    controller: InferenceController = Depends(get_inference_controller),
-    target_date: date = Query(...),
-    days_back: int = Query(...),
-    db: AsyncSession = Depends(get_db),
-):
-    response: list[StockToPredictRequestSchema] = (
-        await controller.get_all_inference_data_controller(
-            target_date=target_date,
-            days_back=days_back,
-            db=db,
-        )
     )
     return success_response(data=response)
 
@@ -101,15 +81,15 @@ async def get_all_inference_data_route(
     "/inference_data/industry",
     response_model=BaseSuccessResponse[list[StockToPredictRequestSchema]],
 )
-async def get_inference_data_by_industry_route(
+async def get_inference_data_industry_route(
     industry: IndustryCodeEnum = Query(...),
-    target_date: date = Query(...),
-    days_back: int = Query(...),
+    target_date: date = Query(default=get_today_bangkok_date()),
+    days_back: int = Query(default=60, ge=1),
     controller: InferenceController = Depends(get_inference_controller),
     db: AsyncSession = Depends(get_db),
 ):
     response: list[StockToPredictRequestSchema] = (
-        await controller.get_inference_data_by_industry_controller(
+        await controller.get_inference_data_industry_controller(
             industry=industry,
             target_date=target_date,
             days_back=days_back,
@@ -120,13 +100,13 @@ async def get_inference_data_by_industry_route(
 
 
 @router.get(
-    "/inference_data",
+    "/inference_data/stocks",
     response_model=BaseSuccessResponse[list[StockToPredictRequestSchema]],
 )
 async def get_inference_data_route(
-    stock_tickers: List[str] = Query(...),
+    stock_tickers: list[str] = Query(...),
     target_date: date = Query(...),
-    days_back: int = Query(...),
+    days_back: int = Query(default=60, ge=1),
     controller: InferenceController = Depends(get_inference_controller),
     db: AsyncSession = Depends(get_db),
 ):

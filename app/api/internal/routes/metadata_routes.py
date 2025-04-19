@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.ml_ops.controllers.metadata_controller import (
+from app.api.internal.controllers.metadata_controller import (
     MetadataController,
     get_metadata_controller,
 )
-from app.api.ml_ops.schemas.metadata_schema import (
+from app.api.internal.schemas.metadata_schema import (
     ModelMetadataResponseSchema,
     SaveModelMetadataRequestSchema,
 )
@@ -18,11 +18,11 @@ from app.core.enums.industry_code_enum import IndustryCodeEnum
 
 router = APIRouter(
     prefix="/metadata",
-    tags=["[ml-ops] Metadata"],
+    tags=["[Internal] Metadata"],
 )
 
 
-@router.post("/insert-stock")
+@router.post("/stock/insert")
 async def insert_stock_route(
     stock_ticker: str,
     industry_code: IndustryCodeEnum,
@@ -41,7 +41,7 @@ async def insert_stock_route(
     return success_response(data=response)
 
 
-@router.get("/update-stock")
+@router.patch("/stock/update")
 async def update_stock_route(
     stock_ticker: str,
     industry_code: IndustryCodeEnum | None = None,
@@ -63,31 +63,25 @@ async def update_stock_route(
 
 
 @router.get(
-    "/get-model", response_model=BaseSuccessResponse[list[ModelMetadataResponseSchema]]
+    "/ml-model", response_model=BaseSuccessResponse[list[ModelMetadataResponseSchema]]
 )
 async def get_model_metadata_route(
     stock_tickers: list[str] = Query(...),
     controller: MetadataController = Depends(get_metadata_controller),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Get the active model detail for the given stock ids.
-    """
     response: list[ModelMetadataResponseSchema] = await controller.get_model_controller(
         stock_tickers=stock_tickers, db=db
     )
     return success_response(data=response)
 
 
-@router.post("/save-model")
-async def save_model_metadata_route(
+@router.post("/ml-model")
+async def insert_model_metadata_route(
     request: SaveModelMetadataRequestSchema,
     controller: MetadataController = Depends(get_metadata_controller),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Save the model for the given stock ids.
-    """
     response = await controller.save_model_controller(
         request=request,
         db=db,

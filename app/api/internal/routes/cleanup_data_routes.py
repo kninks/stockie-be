@@ -16,7 +16,7 @@ router = APIRouter(
 )
 
 
-@router.delete("/default")
+@router.delete("/all")
 async def clean_data_route(
     db: AsyncSession = Depends(get_db),
     controller: CleanupDataController = Depends(get_cleanup_data_controller),

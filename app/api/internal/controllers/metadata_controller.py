@@ -3,11 +3,11 @@ from typing import Optional
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.ml_ops.schemas.metadata_schema import (
+from app.api.internal.schemas.metadata_schema import (
     ModelMetadataResponseSchema,
     SaveModelMetadataRequestSchema,
 )
-from app.api.ml_ops.services.metadata_service import (
+from app.api.internal.services.metadata_service import (
     MetadataService,
     get_metadata_service,
 )

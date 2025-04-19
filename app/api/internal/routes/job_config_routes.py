@@ -42,8 +42,8 @@ async def get_configs_route(
     return success_response(data=response)
 
 
-@router.post("/single")
-async def set_configs_route(
+@router.patch("/single")
+async def set_config_route(
     request: ConfigUpdateRequest,
     controller: JobConfigController = Depends(get_job_config_controller),
     db: AsyncSession = Depends(get_db),

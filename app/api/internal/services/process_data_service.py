@@ -20,6 +20,10 @@ from app.api.general.services.trading_data_service import (
 from app.api.internal.repositories.process_data_repository import (
     ProcessDataRepository,
 )
+from app.api.internal.services.job_config_service import (
+    JobConfigService,
+    get_job_config_service,
+)
 from app.core.common.exceptions.custom_exceptions import DBError
 from app.core.common.utils.datetime_utils import (
     get_last_market_open_date,
@@ -29,6 +33,7 @@ from app.core.common.utils.datetime_utils import (
 )
 from app.core.common.utils.validators import validate_required
 from app.core.enums.industry_code_enum import IndustryCodeEnum
+from app.core.enums.job_enum import JobConfigEnum
 from app.models import Prediction
 
 logger = logging.getLogger(__name__)
@@ -42,32 +47,70 @@ class ProcessDataService:
         prediction_service: PredictionService,
         top_prediction_service: TopPredictionService,
         trading_data_service: TradingDataService,
+        job_config_service: JobConfigService,
     ):
         self.process_data_repository = process_data_repository
         self.stock_service = stock_service
         self.prediction_service = prediction_service
         self.top_prediction_service = top_prediction_service
         self.trading_data_service = trading_data_service
+        self.job_config_service = job_config_service
 
     async def rank_and_save_top_predictions_all(
         self,
-        period: int,
         target_date: date,
         db: AsyncSession,
     ):
-        validate_required(period, "period")
         validate_required(target_date, "target date")
 
         industry_codes = [item for item in IndustryCodeEnum]
-        for industry_code in industry_codes:
-            await self.rank_and_save_top_prediction(
-                industry_code=industry_code,
-                period=period,
-                target_date=target_date,
-                db=db,
-            )
+        period: list[int] = await self.job_config_service.get_job_config(
+            db=db, key=JobConfigEnum.SAVE_INFERENCE_PERIODS
+        )
 
-    async def rank_and_save_top_prediction(
+        for i in industry_codes:
+            for p in period:
+                await self.rank_and_save_top_prediction_one(
+                    industry_code=i,
+                    period=p,
+                    target_date=target_date,
+                    db=db,
+                )
+
+    async def rank_and_save_top_predictions(
+        self,
+        industry_codes: list[IndustryCodeEnum],
+        periods: list[int],
+        target_dates: list[date],
+        db: AsyncSession,
+    ) -> dict[str, list[any]]:
+        validate_required(target_dates, "target date")
+
+        results = {
+            "succeeded": [],
+            "failed": [],
+        }
+
+        for i in industry_codes:
+            for p in periods:
+                for d in target_dates:
+                    try:
+                        await self.rank_and_save_top_prediction_one(
+                            industry_code=i,
+                            period=p,
+                            target_date=d,
+                            db=db,
+                        )
+                        results["succeeded"].append((i.value, p, str(d)))
+                    except Exception as e:
+                        logger.error(
+                            f"Ranking failed for {i.value}, period={p}, date={d}: {e}"
+                        )
+                        results["failed"].append((i.value, p, str(d), str(e)))
+
+        return results
+
+    async def rank_and_save_top_prediction_one(
         self,
         industry_code: IndustryCodeEnum,
         period: int,
@@ -168,8 +211,66 @@ class ProcessDataService:
             logger.error(f"Failed to pull trading data: {e}")
             raise DBError("Failed to pull trading data") from e
 
+    async def accuracy_all(
+        self,
+        db: AsyncSession,
+        target_date: date,
+        days_back: int,
+    ):
+        try:
+            all_stocks = await self.stock_service.get_active(db=db)
+            stock_tickers = [stock.ticker for stock in all_stocks]
+            await self.accuracy(
+                stock_tickers=stock_tickers,
+                target_date=target_date,
+                days_back=days_back,
+                db=db,
+            )
+            return
+        except Exception as e:
+            logger.error(f"Error in accuracy_all: {e}")
+            raise e
+
+    # TODO: find closing prices n days back -> average -> compare with the prediction
+    # ** compare with what day?
+    async def accuracy(
+        self,
+        db: AsyncSession,
+        stock_tickers: list[str],
+        target_date: date,
+        days_back: int,
+    ):
+        # actual closing prices
+        # all_closing_prices = await self.closing_price_service.get_closing_price_value_by_stock_tickers_and_date_range(
+        #     db=db,
+        #     stock_tickers=stock_tickers,
+        #     target_date=target_date,
+        #     days_back=days_back,
+        # )
+        # avg_closing_prices = [
+        #     {
+        #         "stock_ticker": stock_ticker,
+        #         "avg_closing_price": sum(float(p) for p in closing_prices)
+        #         / len(closing_prices),
+        #     }
+        #     for stock_ticker, closing_prices in all_closing_prices.items()
+        # ]
+        #
+        # # predicted closing prices
+        # all_predictions = (
+        #     await self.prediction_service.get_by_date_and_period_and_stock_tickers(
+        #         db=db, stock_tickers=stock_tickers, target_date=target_date, period=1
+        #     )
+        # )
+        # response = await self.discord.send_discord_message(
+        #     message="Accuracy Evaluation started",
+        #     job_name="Accuracy Evaluation",
+        # )
+        # return response
+        pass
+
     @staticmethod
-    def get_market_close_date(
+    def get_market_open_date(
         target_date: date,
         n_days: int = None,
     ) -> dict[str, bool | date]:
@@ -199,4 +300,5 @@ def get_process_data_service() -> ProcessDataService:
         prediction_service=get_prediction_service(),
         top_prediction_service=get_top_prediction_service(),
         trading_data_service=get_trading_data_service(),
+        job_config_service=get_job_config_service(),
     )
