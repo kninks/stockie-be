@@ -58,7 +58,7 @@ resource "google_cloud_scheduler_job" "rank_predictions" {
 resource "google_cloud_scheduler_job" "evaluate_accuracy" {
   name        = "evaluate-accuracy-job"
   description = "Evaluate prediction accuracy"
-  schedule    = "30 23 * * 6" # 11:30 PM every Saturday
+  schedule    = "00 15 * * 6" # 15:00 PM every Saturday
   time_zone   = "Asia/Bangkok"
 
   http_target {
@@ -77,7 +77,7 @@ resource "google_cloud_scheduler_job" "evaluate_accuracy" {
 resource "google_cloud_scheduler_job" "cleanup_old_data" {
   name        = "cleanup-old-data-job"
   description = "Clean up old data weekly"
-  schedule    = "30 23 * * 6" # 11:30 PM every Saturday
+  schedule    = "00 21 * * 6" # 9:00 PM every Saturday
   time_zone   = "Asia/Bangkok"
 
   http_target {

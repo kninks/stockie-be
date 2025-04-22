@@ -60,7 +60,7 @@ class PredictService:
             else yesterday
         )
         predicted_price_date = get_n_market_days_ahead(
-            start_date=closing_price_date, n=period
+            start_date=closing_price_date, n=period + 1
         )
 
         try:

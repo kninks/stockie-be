@@ -40,3 +40,8 @@ class InferenceResultSchema(BaseModel):
     predicted_price: Optional[list[float]] = None
     success: bool
     error_message: Optional[str] = None
+
+
+class InferenceResultSummarySchema(BaseModel):
+    success: list[InferenceResultSchema]
+    failed: list[InferenceResultSchema]
