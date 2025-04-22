@@ -1,4 +1,5 @@
 import logging
+import time
 from collections import defaultdict
 from datetime import date
 
@@ -20,6 +21,7 @@ from app.api.general.services.trading_data_service import (
 )
 from app.api.ml_ops.schemas.inference_schema import (
     InferenceResultSchema,
+    InferenceResultSummarySchema,
     StockToPredictRequestSchema,
 )
 from app.core.clients.discord_client import DiscordOperations, get_discord_operations
@@ -28,9 +30,14 @@ from app.core.clients.ml_server_operations import (
     get_ml_server_operations,
 )
 from app.core.common.exceptions.custom_exceptions import MLServerError
+from app.core.common.utils.measurement import send_metric
 from app.core.common.utils.validators import validate_required
 from app.core.enums.industry_code_enum import IndustryCodeEnum
 from app.core.enums.job_enum import JobTypeEnum
+from app.core.enums.measurement_enum import (
+    MeasurementMetric,
+    MeasurementTag,
+)
 from app.core.enums.trading_data_enum import TradingDataEnum
 from app.models import Prediction, TradingData
 
@@ -100,6 +107,8 @@ class InferenceService:
         validate_required(target_date, "Target date")
         validate_required(days_back, "Days back")
 
+        start = time.perf_counter()
+
         inference_data: list[StockToPredictRequestSchema] = (
             await self.get_inference_data_by_stock_tickers(
                 stock_tickers=stock_tickers,
@@ -109,15 +118,16 @@ class InferenceService:
             )
         )
 
-        inference_results: list[InferenceResultSchema] = (
+        inference_results: InferenceResultSummarySchema = (
             await self._make_run_inference_request_to_ml_server(
                 inference_data=inference_data,
                 days_forward=days_forward,
             )
         )
 
-        success_results = [i for i in inference_results if i.success]
-        failed_results = [i for i in inference_results if not i.success]
+        success_results = inference_results.success
+        failed_results = inference_results.failed
+
         if failed_results:
             failed_tickers = [res.stock_ticker for res in failed_results]
             await self.discord.send_discord_message(
@@ -139,21 +149,31 @@ class InferenceService:
             )
         )
 
+        elapsed = time.perf_counter() - start
+        send_metric(
+            metric=MeasurementMetric.total_predict_time,
+            value=elapsed,
+            tags={
+                MeasurementTag.batch_size: len(stock_tickers),
+                MeasurementTag.success_count: len(success_results),
+                MeasurementTag.fail_count: len(failed_results),
+            },
+        )
         return saved_predictions
 
-    async def run_inference_by_industy_code(
+    async def run_inference_by_industry_code(
         self,
         db: AsyncSession,
         industry_code: IndustryCodeEnum,
         target_date: date,
         days_back: int,
         days_forward: int = 15,
-    ) -> list[InferenceResultSchema]:
+    ) -> InferenceResultSummarySchema:
         stock_tickers = await self.stock_service.get_by_industry_code(
             db=db, industry_code=industry_code
         )
         stock_ticker_values = [stock.ticker for stock in stock_tickers]
-        inference_results: list[InferenceResultSchema] = (
+        inference_results: InferenceResultSummarySchema = (
             await self.run_inference_by_stock_tickers(
                 db=db,
                 stock_tickers=stock_ticker_values,
@@ -171,7 +191,7 @@ class InferenceService:
         target_date: date,
         days_back: int,
         days_forward: int = 15,
-    ) -> list[InferenceResultSchema]:
+    ) -> InferenceResultSummarySchema:
         inference_data: list[StockToPredictRequestSchema] = (
             await self.get_inference_data_by_stock_tickers(
                 stock_tickers=stock_tickers,
@@ -180,12 +200,13 @@ class InferenceService:
                 db=db,
             )
         )
-        inference_results: list[InferenceResultSchema] = (
+        inference_results: InferenceResultSummarySchema = (
             await self._make_run_inference_request_to_ml_server(
                 inference_data,
                 days_forward=days_forward,
             )
         )
+
         return inference_results
 
     # DONE: Only for admin
@@ -221,12 +242,11 @@ class InferenceService:
         target_date: date,
         days_back: int,
     ) -> list[StockToPredictRequestSchema]:
-        """
-        Get the inference data by stock tickers.
-        """
         validate_required(stock_tickers, "Stock tickers")
         validate_required(target_date, "Target date")
         validate_required(days_back, "Days back")
+
+        start = time.perf_counter()
 
         active_models = await self.stock_model_service.get_active_by_stock_tickers(
             db=db, stock_tickers=stock_tickers
@@ -322,21 +342,45 @@ class InferenceService:
             for model in active_models
         ]
 
+        elapsed = time.perf_counter() - start
+        send_metric(
+            metric=MeasurementMetric.get_data_time,
+            value=elapsed,
+            tags={
+                MeasurementTag.batch_size: len(stock_tickers),
+            },
+        )
+
         return inference_data
 
     # DONE
     async def _make_run_inference_request_to_ml_server(
         self, inference_data: list[StockToPredictRequestSchema], days_forward: int = 15
-    ) -> list[InferenceResultSchema]:
-        """
-        Make a request to the ML server to run inference.
-        """
+    ) -> InferenceResultSummarySchema:
         validate_required(inference_data, "Inference data")
+
+        start = time.perf_counter()
+
         raw_response = await self.ml.run_inference(
             stocks=inference_data,
             days_ahead=days_forward + 1,  # day 0 is the target date
         )
-        response = [InferenceResultSchema(**r) for r in raw_response]
+        success, failed = [], []
+        for r in raw_response:
+            res = InferenceResultSchema(**r)
+            (success if res.success else failed).append(res)
+
+        response = InferenceResultSummarySchema(success=success, failed=failed)
+        elapsed = time.perf_counter() - start
+        send_metric(
+            metric=MeasurementMetric.ml_time,
+            value=elapsed,
+            tags={
+                MeasurementTag.batch_size: len(inference_data),
+                MeasurementTag.success_count: len(success),
+                MeasurementTag.fail_count: len(failed),
+            },
+        )
         return response
 
     # DONE
@@ -348,6 +392,9 @@ class InferenceService:
         success_results: list[InferenceResultSchema],
         periods: list[int],
     ) -> list[Prediction] | None:
+
+        start = time.perf_counter()
+
         predictions = self._prepare_prediction_rows(
             target_date=target_date,
             inference_data=inference_data,
@@ -356,6 +403,15 @@ class InferenceService:
         )
         saved_predictions = await self.prediction_service.create_by_list(
             db=db, prediction_data_list=predictions
+        )
+
+        elapsed = time.perf_counter() - start
+        send_metric(
+            metric=MeasurementMetric.save_time,
+            value=elapsed,
+            tags={
+                MeasurementTag.batch_size: len(predictions),
+            },
         )
         return saved_predictions
 

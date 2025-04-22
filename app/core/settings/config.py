@@ -14,6 +14,8 @@ class Config:
         if os.getenv("ENVIRONMENT", "local") == "local":
             load_dotenv()
 
+        self.ENVIRONMENT = self._require_env("ENVIRONMENT")
+
         self.DATABASE_URL = self._require_env("DATABASE_URL")
         self.ML_SERVER_URL = self._require_env("ML_SERVER_URL")
         self.DISCORD_WEBHOOK_URL = self._require_env("DISCORD_WEBHOOK_URL")

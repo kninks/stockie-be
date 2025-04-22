@@ -4,7 +4,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.ml_ops.schemas.inference_schema import (
-    InferenceResultSchema,
+    InferenceResultSummarySchema,
     StockToPredictRequestSchema,
     TriggerAllInferenceRequestSchema,
     TriggerInferenceRequestSchema,
@@ -54,13 +54,15 @@ class InferenceController:
         self,
         request: TriggerAllInferenceRequestSchema,
         db: AsyncSession,
-    ) -> list[InferenceResultSchema]:
-        response = await self.service.run_inference_by_industy_code(
-            industry_code=request.industry,
-            target_date=request.target_date,
-            days_back=request.days_back,
-            days_forward=request.days_forward,
-            db=db,
+    ) -> InferenceResultSummarySchema:
+        response: InferenceResultSummarySchema = (
+            await self.service.run_inference_by_industry_code(
+                industry_code=request.industry,
+                target_date=request.target_date,
+                days_back=request.days_back,
+                days_forward=request.days_forward,
+                db=db,
+            )
         )
         return jsonable_encoder(response)
 
@@ -68,13 +70,15 @@ class InferenceController:
         self,
         request: TriggerInferenceRequestSchema,
         db: AsyncSession,
-    ) -> list[InferenceResultSchema]:
-        response = await self.service.run_inference_by_stock_tickers(
-            stock_tickers=request.stock_tickers,
-            target_date=request.target_date,
-            days_back=request.days_back,
-            days_forward=request.days_forward,
-            db=db,
+    ) -> InferenceResultSummarySchema:
+        response: InferenceResultSummarySchema = (
+            await self.service.run_inference_by_stock_tickers(
+                stock_tickers=request.stock_tickers,
+                target_date=request.target_date,
+                days_back=request.days_back,
+                days_forward=request.days_forward,
+                db=db,
+            )
         )
         return jsonable_encoder(response)
 

@@ -8,7 +8,7 @@ from app.api.ml_ops.controllers.inference_controller import (
     get_inference_controller,
 )
 from app.api.ml_ops.schemas.inference_schema import (
-    InferenceResultSchema,
+    InferenceResultSummarySchema,
     StockToPredictRequestSchema,
     TriggerAllInferenceRequestSchema,
     TriggerInferenceRequestSchema,
@@ -49,14 +49,14 @@ async def trigger_infer_and_save_route(
 
 @router.post(
     "/trigger-infer/industry",
-    response_model=BaseSuccessResponse[list[InferenceResultSchema]],
+    response_model=BaseSuccessResponse[InferenceResultSummarySchema],
 )
 async def trigger_infer_only_industry_route(
     request: TriggerAllInferenceRequestSchema,
     controller: InferenceController = Depends(get_inference_controller),
     db: AsyncSession = Depends(get_db),
 ):
-    response: list[InferenceResultSchema] = (
+    response: InferenceResultSummarySchema = (
         await controller.infer_only_industry_controller(request=request, db=db)
     )
     return success_response(data=response)
@@ -64,14 +64,14 @@ async def trigger_infer_only_industry_route(
 
 @router.post(
     "/trigger-infer/stocks",
-    response_model=BaseSuccessResponse[list[InferenceResultSchema]],
+    response_model=BaseSuccessResponse[InferenceResultSummarySchema],
 )
 async def trigger_infer_only_route(
     request: TriggerInferenceRequestSchema,
     controller: InferenceController = Depends(get_inference_controller),
     db: AsyncSession = Depends(get_db),
 ):
-    response: list[InferenceResultSchema] = await controller.infer_only_controller(
+    response: InferenceResultSummarySchema = await controller.infer_only_controller(
         request=request, db=db
     )
     return success_response(data=response)
